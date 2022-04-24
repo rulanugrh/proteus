@@ -6,3 +6,9 @@ type Product struct {
 	Price        int
 	CategoryName string
 }
+
+type PaginationProduct struct {
+	Limit int
+	Page  int
+	Sort  string
+}

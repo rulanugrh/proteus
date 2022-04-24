@@ -52,8 +52,8 @@ func (prod *productinterfaces) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (prod *productinterfaces) FindAll(ctx context.Context) ([]domain.Product, error) {
-	productDomain := prod.productinter.FindAll(ctx)
+func (prod *productinterfaces) FindAll(ctx context.Context, pagination domain.PaginationProduct) ([]domain.Product, error) {
+	productDomain := prod.productinter.FindAll(ctx, pagination)
 
 	return productDomain, nil
 

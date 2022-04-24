@@ -11,6 +11,7 @@ import (
 	"github.com/ItsArul/TokoKu/entity/domain"
 	"github.com/ItsArul/TokoKu/entity/web"
 	"github.com/ItsArul/TokoKu/services/interfaces"
+	"github.com/ItsArul/TokoKu/utilities"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,8 +53,9 @@ func (p *productcontroler) Create() gin.HandlerFunc {
 func (p *productcontroler) FindAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		context := context.Background()
+		pagination := utilities.PaginationRequest(ctx)
 
-		productResponse, err := p.product.FindAll(context)
+		productResponse, err := p.product.FindAll(context, pagination)
 		if err != nil {
 			response := web.ErrorResponse{
 				Code:    500,

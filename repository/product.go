@@ -40,11 +40,13 @@ func (p *productrepository) FindById(ctx context.Context, id uint) (domain.Produ
 
 }
 
-func (p *productrepository) FindAll(ctx context.Context) []domain.Product {
+func (p *productrepository) FindAll(ctx context.Context, pagination domain.PaginationProduct) []domain.Product {
 	var product []domain.Product
 
 	tx := utilities.Dbconn.WithContext(ctx)
-	err := tx.Find(&product).Error
+	offset := (pagination.Page - 1) * pagination.Limit
+	build := tx.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	err := build.Find(&product).Error
 	if err != nil {
 		fmt.Println("cannot find all product")
 		panic(err)

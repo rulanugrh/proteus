@@ -34,8 +34,8 @@ func (prod *productinterfaces) FindById(ctx context.Context, id uint) (domain.Pr
 	return productdomain, nil
 }
 
-func (prod *productinterfaces) Update(ctx context.Context, id uint) (domain.Product, error) {
-	productdomain, err := prod.productinter.Update(ctx, id)
+func (prod *productinterfaces) Update(ctx context.Context, id uint, product domain.Product) (domain.Product, error) {
+	productdomain, err := prod.productinter.Update(ctx, id, product)
 	if err != nil {
 		utilities.Error(err)
 	}

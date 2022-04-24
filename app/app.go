@@ -1,11 +1,14 @@
 package app
 
 import (
+	"github.com/ItsArul/TokoKu/config"
 	productRepo "github.com/ItsArul/TokoKu/controller/interfaces"
 	"github.com/gin-gonic/gin"
 )
 
 func Run(product productRepo.ProductController) {
+
+	configs := config.Get()
 	server := gin.Default()
 
 	route := server.Group("/api/product")
@@ -17,5 +20,5 @@ func Run(product productRepo.ProductController) {
 		route.DELETE("/:id", product.Delete())
 	}
 
-	server.Run(":8080")
+	server.Run(configs.App.Host + ":" + configs.App.Port)
 }

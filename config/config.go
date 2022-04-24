@@ -1,15 +1,17 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
-type AppConfig struct {
+type Appconfig struct {
+	App struct {
+		Port string
+		Host string
+	}
+
 	Database struct {
 		Port     string
 		Name     string
@@ -19,39 +21,36 @@ type AppConfig struct {
 	}
 }
 
-var Dbconn *gorm.DB
+var appconfig *Appconfig
 
-func GetConnect() *gorm.DB {
-	var config AppConfig
+func Get() *Appconfig {
+	if appconfig == nil {
+		appconfig = ConfigInit()
+	}
+	return appconfig
+}
 
+func ConfigInit() *Appconfig {
 	err := godotenv.Load()
+
+	configs := Appconfig{}
 	if err != nil {
-		config.Database.User = "root"
-		config.Database.Name = "TokoKu"
-		config.Database.Password = "12345"
-		config.Database.Host = "localhost"
-		config.Database.Port = "3306"
+		configs.Database.User = "root"
+		configs.Database.Name = "tokoku"
+		configs.Database.Password = "12345"
+		configs.Database.Host = "localhost"
+		configs.Database.Port = "3306"
+		configs.App.Host = "localhost"
+		configs.App.Port = "8080"
 	}
 
-	config.Database.User = os.Getenv("DB_USER")
-	config.Database.Password = os.Getenv("DB_PASS")
-	config.Database.Host = os.Getenv("DB_HOST")
-	config.Database.Port = os.Getenv("DB_PORT")
-	config.Database.Name = os.Getenv("DB_NAME")
+	configs.Database.User = os.Getenv("DB_USER")
+	configs.Database.Password = os.Getenv("DB_PASS")
+	configs.Database.Host = os.Getenv("DB_HOST")
+	configs.Database.Port = os.Getenv("DB_PORT")
+	configs.Database.Name = os.Getenv("DB_NAME")
+	configs.App.Host = os.Getenv("APP_HOST")
+	configs.App.Port = os.Getenv("APP_PORT")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
-		config.Database.User,
-		config.Database.Password,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.Name)
-
-	db, errDb := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if errDb != nil {
-		fmt.Println("cant connect database")
-	}
-
-	Dbconn = db
-
-	return db
+	return &configs
 }

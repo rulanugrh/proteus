@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -101,11 +103,16 @@ func (p *productcontroler) FindById() gin.HandlerFunc {
 
 func (p *productcontroler) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		var product domain.Product
 		GetId := ctx.Param("id")
 		Id, _ := strconv.Atoi(GetId)
 
 		context := context.Background()
-		productresponse, err := p.product.Update(context, uint(Id))
+
+		updata, _ := ioutil.ReadAll(ctx.Request.Body)
+		json.Unmarshal(updata, &product)
+
+		productresponse, err := p.product.Update(context, uint(Id), product)
 		if err != nil {
 			response := web.ErrorResponse{
 				Code:    500,

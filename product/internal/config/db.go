@@ -19,13 +19,13 @@ func InitializeDB(conf *App) *Database {
 }
 
 func (p *Database) ConnectionDB() {
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&TimeZone=Asia/Jakarta", 
-    p.conf.Database.User, 
-    p.conf.Database.Pass, 
-    p.conf.Database.Host, 
-    p.conf.Database.Port, 
-    p.conf.Database.Name,
-  )
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&TimeZone=Asia/Jakarta",
+		p.conf.Database.User,
+		p.conf.Database.Pass,
+		p.conf.Database.Host,
+		p.conf.Database.Port,
+		p.conf.Database.Name,
+	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
@@ -37,5 +37,5 @@ func (p *Database) ConnectionDB() {
 }
 
 func (p *Database) Migration() {
-  p.DB.AutoMigrate(&domain.Product{}, &domain.Category{}, &domain.Comment{})
+	p.DB.AutoMigrate(&domain.Product{}, &domain.Category{}, &domain.Comment{})
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/rulanugrh/tokoku/product/internal/config"
 )
 
-func CORS(next http.Handler) http.HandlerFunc {
+func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conf := config.GetConfig()
 

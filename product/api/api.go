@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rulanugrh/tokoku/product/api/handler"
 	"github.com/rulanugrh/tokoku/product/internal/config"
+	"github.com/rulanugrh/tokoku/product/internal/middleware"
 	"github.com/rulanugrh/tokoku/product/internal/repository"
 	"github.com/rulanugrh/tokoku/product/internal/service"
 )
@@ -61,6 +62,11 @@ func main() {
 	}
 
 	route := mux.NewRouter()
+	// middleware impelment
+	route.Use(middleware.CORS)
+	route.Use(middleware.ValidateToken)
+
+	// routes app 
 	api.ProductRoute(route)
 	api.CategoryRoute(route)
 	api.CommentRoute(route)

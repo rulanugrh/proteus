@@ -58,8 +58,8 @@ func initConfig() *App {
 
 	conf.Server.Host = os.Getenv("SERVER_HOST")
 	conf.Server.Port = os.Getenv("SERVER_PORT")
-  conf.Server.Secret = os.Getenv("SERVER_SECRET")
-  conf.Server.Origin = os.Getenv("SERVER_ORIGIN")
+	conf.Server.Secret = os.Getenv("SERVER_SECRET")
+	conf.Server.Origin = os.Getenv("SERVER_ORIGIN")
 
 	conf.Database.Host = os.Getenv("POSTGRES_HOST")
 	conf.Database.Port = os.Getenv("POSTGRES_PORT")

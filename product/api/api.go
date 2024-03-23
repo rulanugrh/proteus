@@ -11,6 +11,7 @@ import (
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
 	"github.com/rulanugrh/tokoku/product/internal/repository"
 	"github.com/rulanugrh/tokoku/product/internal/service"
+	"github.com/rulanugrh/tokoku/product/pkg"
 )
 
 type API struct {
@@ -47,6 +48,9 @@ func main() {
 	db.ConnectionDB()
 	db.Migration()
 
+	rabbit := config.InitRabbit(conf)
+	rabbit.InitRabbit()
+
 	productRepo := repository.ProductRepository(db)
 	commentRepo := repository.CommentRepository(db)
 	categoryRepo := repository.CategoryRepository(db)
@@ -55,8 +59,10 @@ func main() {
 	commentService := service.CommentService(commentRepo)
 	categoryService := service.CategoryService(categoryRepo)
 
+	rabbitInterface := pkg.RabbitMQ(*rabbit)
+
 	api := API{
-		product: handler.ProductHandler(productService),
+		product: handler.ProductHandler(productService, rabbitInterface),
 		comment: handler.CommentHandler(commentService),
 		category: handler.CategoryHandler(categoryService),
 	}

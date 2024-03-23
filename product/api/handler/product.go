@@ -10,6 +10,7 @@ import (
 	"github.com/rulanugrh/tokoku/product/internal/entity/web"
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
 	"github.com/rulanugrh/tokoku/product/internal/service"
+	"github.com/rulanugrh/tokoku/product/pkg"
 )
 
 type ProductInterface interface {
@@ -21,10 +22,11 @@ type ProductInterface interface {
 
 type product struct {
 	service service.ProductInterface
+	rabbitmq pkg.RabbitMQInterface
 }
 
-func ProductHandler(service service.ProductInterface) ProductInterface {
-	return &product{service: service}
+func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface) ProductInterface {
+	return &product{service: service, rabbitmq: rabbitmq}
 }
 
 func(p *product) Create(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +34,13 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	err := middleware.ValidateRole(token)
+	claim, err := middleware.CheckToken(token)
+	if err != nil {
+		w.WriteHeader(401)
+		return
+	}
+
+	err = middleware.ValidateRole(token)
 	if err != nil {
 		response, err := json.Marshal(web.Forbidden(err.Error()))
 		if err != nil {
@@ -71,11 +79,27 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	marshalling, _ := json.Marshal(data)
+
+	err = p.rabbitmq.Publish("product-create", marshalling, "product-exchange", "topic", claim.Username)
+	if err != nil {
+		response, err := json.Marshal(web.BadRequest(err.Error()))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+
+		w.WriteHeader(400)
+		w.Write(response)
+		return
+	}
+
 	response, err := json.Marshal(web.Created(data, "success create product"))
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
+
 
 	w.WriteHeader(201)
 	w.Write(response)

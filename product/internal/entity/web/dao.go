@@ -21,11 +21,17 @@ type GetProduct struct {
 	Comment     []Comment `json:"comment" form:"comment"`
 }
 
-type Category struct {
+type GetCategory struct {
 	ID          uint      `json:"id"`
 	Name        string    `json:"name" form:"name"`
 	Description string    `json:"description"`
 	Product     []Product `json:"product" form:"product"`
+}
+
+type Category struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name" form:"name"`
+	Description string `json:"description"`
 }
 
 type Comment struct {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,7 +19,13 @@ func InitializeDB(conf *App) *Database {
 }
 
 func (p *Database) ConnectionDB() {
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&TimeZone=Asia/Jakarta", p.conf.Database.User, p.conf.Database.Pass, p.conf.Database.Host, p.conf.Database.Port, p.conf.Database.Name)
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&TimeZone=Asia/Jakarta", 
+    p.conf.Database.User, 
+    p.conf.Database.Pass, 
+    p.conf.Database.Host, 
+    p.conf.Database.Port, 
+    p.conf.Database.Name,
+  )
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
@@ -27,4 +34,8 @@ func (p *Database) ConnectionDB() {
 	}
 
 	p.DB = db
+}
+
+func (p *Database) Migration() {
+  p.DB.AutoMigrate(&domain.Product{}, &domain.Category{}, &domain.Comment{})
 }

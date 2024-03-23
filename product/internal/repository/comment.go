@@ -12,10 +12,10 @@ type CommentInterface interface {
 }
 
 type comment struct {
-	client config.Database
+	client *config.Database
 }
 
-func CommentRepository(client config.Database) CommentInterface {
+func CommentRepository(client *config.Database) CommentInterface {
 	return &comment{client: client}
 }
 

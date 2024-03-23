@@ -12,10 +12,10 @@ type CategoryInterface interface {
 }
 
 type category struct {
-	client config.Database
+	client *config.Database
 }
 
-func CategoryRepository(client config.Database) CategoryInterface {
+func CategoryRepository(client *config.Database) CategoryInterface {
 	return &category{client: client}
 }
 

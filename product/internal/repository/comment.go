@@ -8,7 +8,7 @@ import (
 type CommentInterface interface {
 	Create(req domain.Comment) (*domain.Comment, error)
 	FindByProductID(id uint) (*[]domain.Comment, error)
-  FindByUserID(id uint) (*[]domain.Comment, error)
+	FindByUserID(id uint) (*[]domain.Comment, error)
 }
 
 type comment struct {

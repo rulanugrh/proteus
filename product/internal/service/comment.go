@@ -20,24 +20,24 @@ func CommentService(repository repository.CommentInterface) CommentInterface {
 	return &comment{repository: repository}
 }
 
-func(c *comment) Create(req domain.Comment) (*web.Comment, error) {
+func (c *comment) Create(req domain.Comment) (*web.Comment, error) {
 	data, err := c.repository.Create(req)
 	if err != nil {
 		return nil, err
 	}
 
 	response := web.Comment{
-		Rate: data.Rate,
-		Product: data.Product.Name,
-		Comment: data.Comment,
-		Avatar: data.Avatar,
+		Rate:     data.Rate,
+		Product:  data.Product.Name,
+		Comment:  data.Comment,
+		Avatar:   data.Avatar,
 		Username: data.Username,
 	}
 
 	return &response, nil
 }
 
-func(c *comment) FindUID(id uint) (*[]web.Comment, error) {
+func (c *comment) FindUID(id uint) (*[]web.Comment, error) {
 	data, err := c.repository.FindByUserID(id)
 	if err != nil {
 		return nil, err
@@ -46,11 +46,11 @@ func(c *comment) FindUID(id uint) (*[]web.Comment, error) {
 	var response []web.Comment
 	for _, v := range *data {
 		result := web.Comment{
-			Product: v.Product.Name,
-			Comment: v.Comment,
-			Rate: v.Rate,
+			Product:  v.Product.Name,
+			Comment:  v.Comment,
+			Rate:     v.Rate,
 			Username: v.Username,
-			Avatar: v.Avatar,
+			Avatar:   v.Avatar,
 		}
 
 		response = append(response, result)
@@ -59,7 +59,7 @@ func(c *comment) FindUID(id uint) (*[]web.Comment, error) {
 	return &response, nil
 }
 
-func(c *comment) FindPID(id uint) (*[]web.Comment, error) {
+func (c *comment) FindPID(id uint) (*[]web.Comment, error) {
 	data, err := c.repository.FindByProductID(id)
 	if err != nil {
 		return nil, err
@@ -68,11 +68,11 @@ func(c *comment) FindPID(id uint) (*[]web.Comment, error) {
 	var response []web.Comment
 	for _, v := range *data {
 		result := web.Comment{
-			Product: v.Product.Name,
-			Comment: v.Comment,
-			Rate: v.Rate,
+			Product:  v.Product.Name,
+			Comment:  v.Comment,
+			Rate:     v.Rate,
 			Username: v.Username,
-			Avatar: v.Avatar,
+			Avatar:   v.Avatar,
 		}
 
 		response = append(response, result)

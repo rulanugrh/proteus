@@ -49,11 +49,11 @@ func (p *product) FindID(id uint) (*web.GetProduct, error) {
 	var comment []web.Comment
 	for _, v := range data.Comment {
 		result := web.Comment{
-			Comment: v.Comment,
-			Product: data.Name,
-			Rate:    v.Rate,
+			Comment:  v.Comment,
+			Product:  data.Name,
+			Rate:     v.Rate,
 			Username: v.Username,
-			Avatar: v.Avatar,
+			Avatar:   v.Avatar,
 		}
 
 		comment = append(comment, result)
@@ -84,11 +84,11 @@ func (p *product) FindAll() (*[]web.GetProduct, error) {
 	for _, result := range *data {
 		for _, c := range result.Comment {
 			comment := web.Comment{
-				Rate:    c.Rate,
-				Product: c.Product.Name,
-				Comment: c.Comment,
+				Rate:     c.Rate,
+				Product:  c.Product.Name,
+				Comment:  c.Comment,
 				Username: c.Username,
-				Avatar: c.Avatar,
+				Avatar:   c.Avatar,
 			}
 
 			comments = append(comments, comment)

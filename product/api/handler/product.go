@@ -81,7 +81,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 
 	marshalling, _ := json.Marshal(data)
 
-	err = p.rabbitmq.Publish("product-create", marshalling, "product-exchange", "topic", claim.Username)
+	err = p.rabbitmq.Publish("product-create", marshalling, "product", "topic", claim.Username)
 	if err != nil {
 		response, err := json.Marshal(web.BadRequest(err.Error()))
 		if err != nil {

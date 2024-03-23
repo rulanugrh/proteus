@@ -10,7 +10,7 @@ type ProductInterface interface {
 	Create(req domain.Product) (*web.Product, error)
 	FindID(id uint) (*web.GetProduct, error)
 	FindAll() (*[]web.GetProduct, error)
-	Update(id uint, req domain.Product) (*web.GetProduct, error)
+	Update(id uint, req domain.Product) (*web.Product, error)
 }
 
 type product struct {
@@ -49,10 +49,9 @@ func (p *product) FindID(id uint) (*web.GetProduct, error) {
 	var comment []web.Comment
 	for _, v := range data.Comment {
 		result := web.Comment{
-			Comment:  v.Comment,
-			Username: v.Product.Name,
-			Product:  data.Name,
-			Avatar:   data.Description,
+			Comment: v.Comment,
+			Product: data.Name,
+			Rate:    v.Rate,
 		}
 
 		comment = append(comment, result)
@@ -83,10 +82,9 @@ func (p *product) FindAll() (*[]web.GetProduct, error) {
 	for _, result := range *data {
 		for _, c := range result.Comment {
 			comment := web.Comment{
-				Username: c.Product.Description,
-				Avatar:   c.Product.Category.Name,
-				Product:  c.Product.Name,
-				Comment:  c.Comment,
+				Rate:    c.Rate,
+				Product: c.Product.Name,
+				Comment: c.Comment,
 			}
 
 			comments = append(comments, comment)
@@ -109,32 +107,19 @@ func (p *product) FindAll() (*[]web.GetProduct, error) {
 	return &response, nil
 }
 
-func (p *product) Update(id uint, req domain.Product) (*web.GetProduct, error) {
+func (p *product) Update(id uint, req domain.Product) (*web.Product, error) {
 	data, err := p.repository.Update(id, req)
 	if err != nil {
 		return nil, err
 	}
 
-	var comments []web.Comment
-	for _, c := range data.Comment {
-		comment := web.Comment{
-			Username: c.Product.Name,
-			Comment:  c.Comment,
-			Avatar:   c.Comment,
-			Product:  c.Product.Name,
-		}
-
-		comments = append(comments, comment)
-	}
-
-	response := web.GetProduct{
+	response := web.Product{
 		ID:        data.ID,
 		Name:      data.Name,
 		Price:     data.Price,
 		Available: data.QtyAvailable,
 		Reserved:  data.QtyReserved,
 		Category:  data.Category.Name,
-		Comment:   comments,
 	}
 
 	return &response, nil

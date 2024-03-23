@@ -3,7 +3,7 @@ package domain
 import "gorm.io/gorm"
 
 type Product struct {
-	gorm.Model
+  gorm.Model
 
   Name string `json:"name" form:"name" validate:"required"`
   Description string `json:"desc" form:"desc" validate:"required"`

@@ -8,6 +8,7 @@ import (
 type CommentInterface interface {
 	Create(req domain.Comment) (*domain.Comment, error)
 	FindByProductID(id uint) (*[]domain.Comment, error)
+  FindByUserID(id uint) (*[]domain.Comment, error)
 }
 
 type comment struct {
@@ -40,6 +41,16 @@ func (c *comment) Create(req domain.Comment) (*domain.Comment, error) {
 func (c *comment) FindByProductID(id uint) (*[]domain.Comment, error) {
 	var model []domain.Comment
 	err := c.client.DB.Preload("Product").Where("product_id = ?", id).Find(&model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &model, nil
+}
+
+func (c *comment) FindByUserID(id uint) (*[]domain.Comment, error) {
+	var model []domain.Comment
+	err := c.client.DB.Preload("Product").Where("user_id = ?", id).Find(&model).Error
 	if err != nil {
 		return nil, err
 	}

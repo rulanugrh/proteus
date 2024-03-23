@@ -30,6 +30,8 @@ func(c *comment) Create(req domain.Comment) (*web.Comment, error) {
 		Rate: data.Rate,
 		Product: data.Product.Name,
 		Comment: data.Comment,
+		Avatar: data.Avatar,
+		Username: data.Username,
 	}
 
 	return &response, nil
@@ -47,6 +49,8 @@ func(c *comment) FindUID(id uint) (*[]web.Comment, error) {
 			Product: v.Product.Name,
 			Comment: v.Comment,
 			Rate: v.Rate,
+			Username: v.Username,
+			Avatar: v.Avatar,
 		}
 
 		response = append(response, result)
@@ -67,6 +71,8 @@ func(c *comment) FindPID(id uint) (*[]web.Comment, error) {
 			Product: v.Product.Name,
 			Comment: v.Comment,
 			Rate: v.Rate,
+			Username: v.Username,
+			Avatar: v.Avatar,
 		}
 
 		response = append(response, result)

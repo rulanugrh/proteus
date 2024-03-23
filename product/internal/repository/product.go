@@ -13,10 +13,10 @@ type ProductInterface interface {
 }
 
 type product struct {
-	client config.Database
+	client *config.Database
 }
 
-func ProductRepository(client config.Database) ProductInterface {
+func ProductRepository(client *config.Database) ProductInterface {
 	return &product{client: client}
 }
 

@@ -35,7 +35,9 @@ type Category struct {
 }
 
 type Comment struct {
-	Rate    int8   `json:"rate"`
-	Comment string `json:"comment"`
-	Product string `json:"product"`
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
+	Rate     int8   `json:"rate"`
+	Comment  string `json:"comment"`
+	Product  string `json:"product"`
 }

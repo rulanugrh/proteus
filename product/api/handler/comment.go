@@ -43,6 +43,10 @@ func(c *comment) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.UserID = claim.ID
+	req.Username = claim.Username
+	req.Avatar = claim.Avatar
+	req.RoleID = claim.RoleID
+	
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		w.WriteHeader(500)

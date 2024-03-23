@@ -29,6 +29,13 @@ type App struct {
 }
 
 var app *App
+func GetConfig() *App {
+  if app == nil {
+    app = initConfig()
+  }
+
+  return app
+}
 
 func initConfig() *App {
   conf := App{}

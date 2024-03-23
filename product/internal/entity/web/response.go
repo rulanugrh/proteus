@@ -53,3 +53,10 @@ func Unauthorized(msg string) Response {
 		Message: msg,
 	}
 }
+
+func InternalServerError(msg string) Response {
+	return Response{
+		Code:    500,
+		Message: msg,
+	}
+}

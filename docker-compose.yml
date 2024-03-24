@@ -1,0 +1,65 @@
+version: '3.9'
+services:
+  db-product:
+    image: postgres:alpine
+    container_name: db-product
+    hostname: db-product
+    environment:
+      - POSTGRES_USER=${DB_PRODUCT_USER}
+      - POSTGRES_PASS=${DB_PRODUCT_PASS}
+      - POSTGRES_DB=${DB_PRODUCT_NAME}
+    ports:
+      - "127.0.0.1:5430:5432"
+    restart: unless-stopped
+    networks:
+      - tokoku
+
+  db-user:
+    image: postgres:alpine
+    container_name: db-user
+    hostname: db-user
+    environment:
+      - POSTGRES_USER=${DB_USER_USER}
+      - POSTGRES_PASS=${DB_USER_PASS}
+      - POSTGRES_DB=${DB_USER_NAME}
+    ports:
+      - "127.0.0.1:5431:5432"
+    restart: unless-stopped
+    networks:
+      - tokoku
+
+  app-product:
+    build:
+      context: ./product/
+      dockerfile: Dockerfile
+      args:
+        - EXPOSE_PORT=${APP_PRODUCT_PORT}
+    env_file:
+      - ./product/.env
+    restart: unless-stopped
+    ports:
+      - ${APP_PRODUCT_PORT}:3000
+    networks:
+      - tokoku
+    depends_on:
+      - db-product
+
+  app-user:
+    build:
+      context: ./user/
+      dockerfile: Dockerfile
+      args:
+        - EXPOSE_PORT=${APP_USER_PORT}
+    env_file:
+      - ./user/.env
+    restart: unless-stopped
+    ports:
+      - ${APP_USER_PORT}:3000
+    networks:
+      - tokoku
+    depends_on:
+      - db-user
+    
+networks:
+  tokoku:
+    driver: bridge

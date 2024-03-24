@@ -18,8 +18,8 @@ async function main() {
         res.status(404).json({ error: `Route ${req.originalUrl} not found` });
     });
 
-    app.listen(process.env.APP_PORT, () => {
-        console.log(`Server running at: ${process.env.APP_PORT}`)
+    app.listen(port, () => {
+        console.log(`Server running at: ${port}`)
     })
 }
 

@@ -16,7 +16,17 @@ export const registerUser = async (req: Request, res: Response) => {
         const { fname, lname, username, email, avatar, roleID, password } = req.body
         const hashPassword = bcrypt.hash(password, 14)
 
-        const userCreate = await prisma.user.create({
+        const find = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        })
+
+        if (find) {
+            res.status(400).json({ msg: 'sorry your email have been created', code: 400 })
+        }
+
+        await prisma.user.create({
             data: {
                 fname,
                 lname,
@@ -29,14 +39,14 @@ export const registerUser = async (req: Request, res: Response) => {
         })
 
         const result: Result = new Result()
-        result.avatar = userCreate.avatar
-        result.fname = userCreate.fname
-        result.lname = userCreate.lname
-        result.roleID = userCreate.roleID
-        result.username = userCreate.username
+        result.avatar = avatar
+        result.fname = fname
+        result.lname = lname
+        result.roleID = roleID
+        result.username = username
 
         res.status(200).json({
-            msg: 'success creata account',
+            msg: 'success create account',
             code: 200,
             data: result,
         })
@@ -62,7 +72,7 @@ export const loginUser = async (req: Request, res: Response) => {
             res.status(404).json({ msg: 'sorry your email not found', code: 404 })
         }
 
-        const verify = bcrypt.compare(password, find.password)
+        const verify = bcrypt.compare(password, find[0].password)
         if (!verify) {
             res.status(400).json({
                 msg: 'sorry your password not matched',
@@ -71,15 +81,16 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         const payload = new Payload()
-        payload.avatar = find.avatar
-        payload.roleID = find.roleID
-        payload.username = find.username
+        payload.avatar = find[0].avatar
+        payload.roleID = find[0].roleID
+        payload.username = find[0].username
 
         const token = await generateToken(payload)
 
         res.cookie('authorization', token, {
             httpOnly: true,
-            sameSite: "lax"
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000
         })
 
         res.status(200).json({ msg: 'success login' })
@@ -99,25 +110,27 @@ export const findID = async (req: Request, res: Response) => {
                 id: Number(id)
             }
         })
-
-        const response: Result = new Result()
-        response.avatar = result.avatar
-        response.fname = result.fname
-        response.lname = result.lname
-        response.roleID = result.roleID
-        response.username = result.username
-
+        
         if (!result) {
             res.status(404).json({
                 msg: 'user not found'
             })
         }
 
+        const response: Result = new Result()
+        response.avatar = result[0].avatar
+        response.fname = result[0].fname
+        response.lname = result[0].lname
+        response.roleID = result[0].roleID
+        response.username = result[0].username
+
+
         res.status(200).json({
             msg: 'user found',
             code: 200,
             data: response
         })
+        
     } catch (error) {
         res.status(500).json({
             msg: 'something error',

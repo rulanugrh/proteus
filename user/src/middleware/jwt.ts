@@ -9,7 +9,7 @@ export class Payload  {
 
 export const generateToken = (payload: Payload) => {
     return jsonwebtoken.sign(payload, process.env.APP_SECRET, {
-        expiresIn: '3600s',
+        expiresIn: '1d',
         algorithm: 'HS256'
     })
 }

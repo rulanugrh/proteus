@@ -18,14 +18,14 @@ service OrderService {
         option (google.api.http) = {
             post: "/api/order/create"
             body: "order"
-        }
+        };
     };
 
     // for endpoint checkout order
     rpc CheckOut(UUID) returns (Response) {
         option (google.api.http) = {
             post: "/api/order/checkout/{uuid}"
-        }
+        };
     };
 }
 

@@ -36,7 +36,7 @@ message Order {
     uint64 user_id = 3;
     uint64 product_id = 4;
     in32 quantity = 5;
-    bool paid = 6;
+    optional bool paid = 6;
     optional google.protobuf.Timestamp create_at = 7;
     optional google.protobuf.Timestamp update_at = 8;
 }

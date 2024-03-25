@@ -1,0 +1,66 @@
+syntax = "proto3";
+package order;
+
+// Import empty proto for delete order
+import "google/protobuf/empty.proto";
+// Import annotations proto for trascoding into HTTP
+imort "google/annotations.proto";
+
+// Path to save record generate
+option go_package = "internal/grpc";
+
+// Endpoint for Order API
+//
+// This service for manage resource order API
+service OrderService {
+    // for create order 
+    rpc Create(Order) returns (Response) {
+        option (google.api.http) = {
+            post: "/api/order/create"
+            body: "order"
+        }
+    };
+
+    // for endpoint checkout order
+    rpc CheckOut(UUID) returns (Response) {
+        option (google.api.http) = {
+            post: "/api/order/checkout/{uuid}"
+        }
+    };
+}
+
+// schema for order input
+message Order {
+    optional uint64 id = 1;
+    optional string uuid = 2;
+    uint64 user_id = 3;
+    uint64 product_id = 4;
+    in32 quantity = 5;
+    bool paid = 6;
+    optional google.protobuf.Timestamp create_at = 7;
+    optional google.protobuf.Timestamp update_at = 8;
+}
+
+// schema for response in API
+message Response {
+    uint64 code = 1;
+    string message = 2;
+    Data data = 3;
+}
+
+// schema for data responses
+message Data {
+    string uuid = 1;
+    string product_name = 2;
+    string user_email = 3;
+    string fname = 4;
+    string lname = 5;
+    int64 price = 6;
+    int64 quantity = 7;
+    int64 total = 8;
+}
+
+// schema for request by UUID
+message UUID {
+    string uuid = 1;
+}

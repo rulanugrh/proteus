@@ -1,0 +1,88 @@
+syntax = "proto3";
+package cart;
+
+// Import empty proto for delete cart
+import "google/protobuf/empty.proto";
+// Import annotations proto for trascoding into HTTP
+import "google/annotations.proto";
+
+// Path to save record generate
+option go_package = "internal/grpc";
+
+// Endpoint for Cart API
+//
+// This service for manage resource cart API
+service CartService {
+    // for create cart
+    rpc Create(Request) returns (Response) {
+        option (google.api.http) = {
+            post: "/api/cart/create"
+            body: "req"
+        };
+    };
+
+    // for update cart
+    rpc Update(Update) returns (Response) {
+        option (google.api.http) = {
+            put: "/api/cart/update/{id}"
+            body: "req"
+        };
+    };
+
+    // for endpoint listcart
+    rpc ListCart(google.protobuf.Empty) returns (stream Data) {
+        option (google.api.http) = {
+            get: "/api/cart/listcart"
+        };
+    };
+    
+    // for endpoint delete cart
+    rpc DeleteCart(ID) returns (Response) {
+        option (google.api.http) = { delete: "/api/cart/delete/{id}"};
+    };
+}
+
+
+// schema for adding to cart
+message Cart {
+    optional uint64 id = 1;
+    uint64 user_id = 2;
+    uint64 product_id = 3;
+    in32 quantity = 4;
+    optional google.protobuf.Timestamp create_at = 5;
+    optional google.protobuf.Timestamp update_at = 6;
+}
+
+// schema for request create
+message Request {
+    Cart req = 1;
+}
+
+// schema for update cart
+message Update {
+    uint64 id = 1;
+    Cart req = 2;
+}
+
+// schema for response cart
+message Response {
+    uint64 code = 1;
+    string message = 2;
+}
+
+// schema for repeated data cart
+message Data {
+    uint64 id = 1;
+    string product_name = 2;
+    string user_email = 3;
+    string fname = 4;
+    string lname = 5;
+    int64 price = 6;
+    int64 quantity = 7;
+}
+
+
+// schema for request by UUID
+message ID {
+    string id = 1;
+}

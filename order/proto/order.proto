@@ -4,7 +4,7 @@ package order;
 // Import empty proto for delete order
 import "google/protobuf/empty.proto";
 // Import annotations proto for trascoding into HTTP
-imort "google/annotations.proto";
+import "google/annotations.proto";
 
 // Path to save record generate
 option go_package = "internal/grpc";

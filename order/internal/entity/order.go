@@ -11,5 +11,5 @@ type Order struct {
 	ProductID uint    `json:"product_id" form:"product_id" validate:"required"`
 	Product   Product `json:"product" form:"product" gorm:"foreignKey:ProductID;references:ID"`
 	Quantity  uint    `json:"quantity" form:"quantity" validate:"required"`
-	Paid      bool    `json:"paid" form:"paid"`
+	Status    string  `json:"status" form:"status"`
 }

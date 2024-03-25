@@ -14,7 +14,7 @@ option go_package = "internal/grpc";
 // This service for manage resource cart API
 service CartService {
     // for create cart
-    rpc Create(Request) returns (Response) {
+    rpc AddToCart(Request) returns (Response) {
         option (google.api.http) = {
             post: "/api/cart/create"
             body: "req"
@@ -40,8 +40,12 @@ service CartService {
     rpc DeleteCart(ID) returns (Response) {
         option (google.api.http) = { delete: "/api/cart/delete/{id}"};
     };
-}
 
+    // for endpoint process from cart
+    rpc Proccess(ID) returns (Created) {
+        option (google.api.http) = { post: "/api/cart/process/{id}" };
+    };
+}
 
 // schema for adding to cart
 message Cart {
@@ -70,17 +74,25 @@ message Response {
     string message = 2;
 }
 
+// schema for response created order 
+message Created {
+    uint64 code = 1;
+    string message = 2;
+    Data data = 3;
+}
+
 // schema for repeated data cart
 message Data {
-    uint64 id = 1;
+    string uuid = 1;
     string product_name = 2;
     string user_email = 3;
     string fname = 4;
     string lname = 5;
     int64 price = 6;
     int64 quantity = 7;
+    int64 total = 8;
+    string link_payment = 9;
 }
-
 
 // schema for request by UUID
 message ID {

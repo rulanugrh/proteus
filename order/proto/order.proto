@@ -14,7 +14,7 @@ option go_package = "internal/grpc";
 // This service for manage resource order API
 service OrderService {
     // for create order 
-    rpc Create(Request) returns (Response) {
+    rpc Receipt(Request) returns (Response) {
         option (google.api.http) = {
             post: "/api/order/create"
             body: "order"
@@ -41,10 +41,10 @@ message Order {
     uint64 user_id = 3;
     uint64 product_id = 4;
     in32 quantity = 5;
-    optional string link_payment = 6;
-    optional string paid = 7;
-    optional google.protobuf.Timestamp create_at = 8;
-    optional google.protobuf.Timestamp update_at = 9;
+    optional link_payment = 6;
+    optional string paid = 8;
+    optional google.protobuf.Timestamp create_at = 9;
+    optional google.protobuf.Timestamp update_at = 10;
 }
 
 // schema for response in API
@@ -64,6 +64,7 @@ message Data {
     int64 price = 6;
     int64 quantity = 7;
     int64 total = 8;
+    string link_payment = 9;
 }
 
 // schema for request by UUID

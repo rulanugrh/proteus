@@ -4,6 +4,7 @@ import (
 	"github.com/rulanugrh/order/internal/config"
 	"github.com/rulanugrh/order/internal/entity"
 	"github.com/rulanugrh/order/internal/util"
+	"github.com/rulanugrh/order/internal/util/constant"
 )
 
 type OrderInterface interface {
@@ -23,14 +24,21 @@ func OrderRepository(client *config.Postgres) OrderInterface {
 func(o *order) Create(req entity.Order) (*entity.Order, error) {
 	req.Status = "not paid"
 	req.UUID = util.GenerateUUID()
+
+	var product entity.Product
+	err_find := o.client.DB.Where("id = ?", req.ProductID).Find(&product)
+	if err_find.RowsAffected == 0 {
+		return nil, constant.NotFound("sorry product with this id not found")
+	}
+
 	err := o.client.DB.Create(&req).Error
 	if err != nil {
-		return nil, err
+		return nil, constant.InternalServerError("sorry cannot create order", err)
 	}
 
 	preload := o.client.DB.Preload("Product").Find(&req).Error
 	if preload != nil {
-		return nil, err
+		return nil, constant.InternalServerError("cannot preload data", preload)
 	}
 
 	return &req, nil
@@ -40,7 +48,7 @@ func(o *order) Checkout(uuid string)  (*entity.Order, error) {
 	var model entity.Order
 	err := o.client.DB.Preload("Product").Where("uuid = ?", uuid).Find(&model).Error
 	if err != nil {
-		return nil, err
+		return nil, constant.InternalServerError("something error while checkout", err)
 	}
 
 	return &model, nil
@@ -49,7 +57,7 @@ func(o *order) Checkout(uuid string)  (*entity.Order, error) {
 func (o *order) Update(uuid string, status string) error {
 	err := o.client.DB.Model(&entity.Order{}).Where("uuid = ?", uuid).Update("status", status).Error
 	if err != nil {
-		return err
+		return constant.InternalServerError("something error while update data", err)
 	}
 
 	return nil

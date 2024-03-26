@@ -1,8 +1,6 @@
 syntax = "proto3";
 package order;
 
-// Import empty proto for delete order
-import "google/protobuf/empty.proto";
 // Import annotations proto for trascoding into HTTP
 import "google/annotations.proto";
 

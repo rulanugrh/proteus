@@ -30,7 +30,7 @@ service CartService {
     };
 
     // for endpoint listcart
-    rpc ListCart(google.protobuf.Empty) returns (stream Data) {
+    rpc ListCart(ID) returns (stream Data) {
         option (google.api.http) = {
             get: "/api/cart/listcart"
         };

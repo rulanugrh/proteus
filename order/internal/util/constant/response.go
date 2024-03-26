@@ -32,9 +32,23 @@ func NotFound(msg string) Response {
 	}
 }
 
+func BadRequest(msg string, err error) Response {
+	return Response{
+		Code:    400,
+		Message: fmt.Sprintf("%s: %s", msg, err.Error()),
+	}
+}
+
 func InternalServerError(msg string, err error) Response {
 	return Response{
 		Code:    500,
 		Message: fmt.Sprintf("%s: %s", msg, err.Error()),
+	}
+}
+
+func OverloadRequest(msg string) Response {
+	return Response{
+		Code:    429,
+		Message: msg,
 	}
 }

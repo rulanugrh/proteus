@@ -41,7 +41,7 @@ func (p *Postgres) StartConnection() error {
 }
 
 func (p *Postgres) Migrate() error {
-	err := p.DB.AutoMigrate(&entity.Product{}, &entity.Order{})
+	err := p.DB.AutoMigrate(&entity.Product{}, &entity.Order{}, &entity.Cart{})
 	if err != nil {
 		log.Printf("error cannot migrate to DB %s", err.Error())
 		return err

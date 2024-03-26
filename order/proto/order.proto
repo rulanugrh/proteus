@@ -14,15 +14,15 @@ option go_package = "internal/grpc";
 // This service for manage resource order API
 service OrderService {
     // for create order 
-    rpc Receipt(Request) returns (Response) {
+    rpc Receipt(Request) returns (ResponseProccess) {
         option (google.api.http) = {
             post: "/api/order/create"
-            body: "order"
+            body: "req"
         };
     };
 
     // for endpoint checkout order
-    rpc CheckOut(UUID) returns (Response) {
+    rpc CheckOut(UUID) returns (ResponseCheckout) {
         option (google.api.http) = {
             post: "/api/order/checkout/{uuid}"
         };
@@ -41,20 +41,41 @@ message Order {
     uint64 user_id = 3;
     uint64 product_id = 4;
     in32 quantity = 5;
-    optional link_payment = 6;
-    optional string paid = 8;
-    optional google.protobuf.Timestamp create_at = 9;
-    optional google.protobuf.Timestamp update_at = 10;
+    string method_payment = 6;
+    string address = 7;
+    optional link_payment = 9;
+    optional string paid = 10;
+    optional google.protobuf.Timestamp create_at = 11;
+    optional google.protobuf.Timestamp update_at = 12;
 }
 
-// schema for response in API
-message Response {
+// schema for response proccess in API
+message ResponseProccess {
     uint64 code = 1;
     string message = 2;
     Data data = 3;
 }
 
+// schema for response checkout API
+message ResponseCheckout {
+    uint64 code = 1;
+    string message = 2;
+    CheckOut data = 3;
+}
+
 // schema for data responses
+message CheckOut {
+    string product_name = 1;
+    string user_email = 2;
+    string fname = 3;
+    string lname = 4;
+    int64 price = 5;
+    int64 quantity = 6;
+    int64 total = 7;
+    string link_payment = 8;
+}
+
+// schema for create process payment
 message Data {
     string uuid = 1;
     string product_name = 2;
@@ -62,9 +83,8 @@ message Data {
     string fname = 4;
     string lname = 5;
     int64 price = 6;
-    int64 quantity = 7;
-    int64 total = 8;
-    string link_payment = 9;
+    string method_payment = 7;
+    string address = 8;
 }
 
 // schema for request by UUID

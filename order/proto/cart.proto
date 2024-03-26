@@ -42,8 +42,11 @@ service CartService {
     };
 
     // for endpoint process from cart
-    rpc Proccess(ID) returns (Created) {
-        option (google.api.http) = { post: "/api/cart/process/{id}" };
+    rpc Proccess(Proccess) returns (Created) {
+        option (google.api.http) = { 
+            post: "/api/cart/process/{id}"
+            body: "req"
+        };
     };
 }
 
@@ -55,6 +58,12 @@ message Cart {
     in32 quantity = 4;
     optional google.protobuf.Timestamp create_at = 5;
     optional google.protobuf.Timestamp update_at = 6;
+}
+
+// schema for process create order
+message OrderRequest {
+    string method_payment = 1;
+    string address = 2;
 }
 
 // schema for request create
@@ -74,6 +83,12 @@ message Response {
     string message = 2;
 }
 
+// schema for proccess 
+message Process {
+    uint64 id = 1;
+    OrderRequest req = 2;
+}
+
 // schema for response created order 
 message Created {
     uint64 code = 1;
@@ -91,7 +106,6 @@ message Data {
     int64 price = 6;
     int64 quantity = 7;
     int64 total = 8;
-    string link_payment = 9;
 }
 
 // schema for request by UUID

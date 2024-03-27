@@ -98,7 +98,43 @@ func (r *rabbit) CatchProduct() error {
 		}
 	}()
 
-	log.Println("[*] Success Consume")
+	log.Println("[*] Success Consume Product Created")
+	<-response
+	return nil
+}
+
+func (r *rabbit) UpdateProduct() error {
+	log.Println("[*] Declaring Queue for Update Product")
+	queue, err_queue := r.client.Channel.QueueDeclare("product-update", true, false, false, false, nil)
+	if err_queue != nil {
+		return constant.InternalServerError("error, cannot declare queue", err_queue)
+	}
+
+	log.Println("[*] Start Consume ...")
+	message, err_message := r.client.Channel.Consume(queue.Name, "", true, false, false, false, nil)
+	if err_message != nil {
+		return constant.InternalServerError("sorry cannot consume this queue", err_message)
+	}
+
+	var response chan struct{}
+	go func() {
+		for msg := range message {
+			log.Println("[*] Receiving Message")
+			var payload entity.Product
+			err := json.Unmarshal(msg.Body, &payload)
+			if err != nil {
+				log.Printf("error marshaling response: %s", err.Error())
+			}
+			
+			err_update := r.db.Update(payload.ID, payload)
+			if err_update != nil {
+				log.Printf("error create, because: %s", err_update.Error())
+			}
+
+		}
+	}()
+
+	log.Printf("[*] Success Consume Message ( Update Product )")
 	<-response
 	return nil
 }

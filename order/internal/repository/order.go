@@ -56,3 +56,12 @@ func (o *order) Update(uuid string, status string) error {
 
 	return nil
 }
+
+func (o *order) SaveTransaction(req entity.Transaction) error {
+	err := o.client.DB.Create(&req).Error
+	if err != nil {
+		return constant.InternalServerError("error while create transaction", err)
+	}
+
+	return nil
+}

@@ -61,3 +61,15 @@ func (p *product) Update(id uint, model entity.Product) error {
 
 	return nil
 }
+
+func (p *product) Delete(id uint) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	defer cancel()
+
+	_, err := p.client.DeleteOne(ctx, bson.M{"id": id})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -12,7 +12,7 @@ import (
 
 type ProductInterface interface {
 	Create(req entity.Product) error
-	FindID(id uint) error
+	FindID(id uint) (*entity.Product, error)
 	Update(id uint, model entity.Product) error
 }
 
@@ -38,16 +38,17 @@ func(p *product) Create(req entity.Product) error {
 	return nil
 }
 
-func(p *product) FindID(id uint) error {
+func(p *product) FindID(id uint) (*entity.Product, error) {
+	var response entity.Product
 	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancel()
 
-	err := p.client.FindOne(ctx, bson.M{"id": id}).Err()
+	err := p.client.FindOne(ctx, bson.M{"id": id}).Decode(&response)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &response, nil
 }
 
 func (p *product) Update(id uint, model entity.Product) error {

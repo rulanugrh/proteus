@@ -1,13 +1,11 @@
 syntax = "proto3";
 package cart;
 
-// Import empty proto for delete cart
-import "google/protobuf/empty.proto";
 // Import annotations proto for trascoding into HTTP
-import "google/annotations.proto";
+import "proto/google/annotations.proto";
 
 // Path to save record generate
-option go_package = "internal/grpc";
+option go_package = "internal/grpc/cart";
 
 // Endpoint for Cart API
 //
@@ -22,7 +20,7 @@ service CartService {
     };
 
     // for update cart
-    rpc Update(Update) returns (Response) {
+    rpc Update(RequestUpdate) returns (Response) {
         option (google.api.http) = {
             put: "/api/cart/update/{id}"
             body: "req"
@@ -42,7 +40,7 @@ service CartService {
     };
 
     // for endpoint process from cart
-    rpc Proccess(Proccess) returns (Created) {
+    rpc Proccesses(RequestProcess) returns (Created) {
         option (google.api.http) = { 
             post: "/api/cart/process/{id}"
             body: "req"
@@ -55,9 +53,7 @@ message Cart {
     optional uint64 id = 1;
     uint64 user_id = 2;
     uint64 product_id = 3;
-    in32 quantity = 4;
-    optional google.protobuf.Timestamp create_at = 5;
-    optional google.protobuf.Timestamp update_at = 6;
+    int32 quantity = 4;
 }
 
 // schema for process create order
@@ -73,7 +69,7 @@ message Request {
 }
 
 // schema for update cart
-message Update {
+message RequestUpdate {
     uint64 id = 1;
     Cart req = 2;
 }
@@ -85,7 +81,7 @@ message Response {
 }
 
 // schema for proccess 
-message Process {
+message RequestProcess {
     uint64 id = 1;
     OrderRequest req = 2;
 }

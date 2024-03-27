@@ -2,10 +2,10 @@ syntax = "proto3";
 package order;
 
 // Import annotations proto for trascoding into HTTP
-import "google/annotations.proto";
+import "proto/google/annotations.proto";
 
 // Path to save record generate
-option go_package = "internal/grpc";
+option go_package = "internal/grpc/order";
 
 // Endpoint for Order API
 //
@@ -38,13 +38,11 @@ message Order {
     optional string uuid = 2;
     uint64 user_id = 3;
     uint64 product_id = 4;
-    in32 quantity = 5;
+    int32 quantity = 5;
     string method_payment = 6;
     string address = 7;
     string requst_currency = 9;
     optional string paid = 10;
-    optional google.protobuf.Timestamp create_at = 11;
-    optional google.protobuf.Timestamp update_at = 12;
 }
 
 // schema for response proccess in API

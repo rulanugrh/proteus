@@ -41,7 +41,7 @@ message Order {
     in32 quantity = 5;
     string method_payment = 6;
     string address = 7;
-    optional link_payment = 9;
+    string requst_currency = 9;
     optional string paid = 10;
     optional google.protobuf.Timestamp create_at = 11;
     optional google.protobuf.Timestamp update_at = 12;

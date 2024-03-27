@@ -64,6 +64,7 @@ message Cart {
 message OrderRequest {
     string method_payment = 1;
     string address = 2;
+    string request_currency = 3;
 }
 
 // schema for request create

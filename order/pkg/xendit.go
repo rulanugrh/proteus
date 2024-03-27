@@ -28,19 +28,20 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 	productID := strconv.Itoa(int(req.ProductID))
 	pay := payment_request.PaymentRequestParameters{
 		ReferenceId: &req.UUID,
-		Currency:    payment_request.PaymentRequestCurrency("IDR"),
+		Currency:    payment_request.PaymentRequestCurrency(req.RequestCurreny),
 		Items: append([]payment_request.PaymentRequestBasketItem{},
 			payment_request.PaymentRequestBasketItem{
 				Name:        req.Product.Name,
 				Description: &req.Product.Description,
 				Quantity:    float64(req.Quantity),
 				Price:       float64(req.Product.Price),
-				Currency:    "IDR",
+				Currency:    req.RequestCurreny,
 				ReferenceId: &productID,
 			},
 		),
 		Customer: map[string]interface{}{
 			"id": req.UserID,
+			"address": req.Address,
 		},
 		Metadata: map[string]interface{}{
 			"type":     "pay",
@@ -74,4 +75,5 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 	} else {
 		return response, nil
 	}
+
 }

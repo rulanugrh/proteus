@@ -58,3 +58,7 @@ func (r *rabbit) Publisher(name string, data []byte, exchange string, exchangeTy
 	return nil
 
 }
+
+func (r *rabbit) CatchProduct() {
+
+}

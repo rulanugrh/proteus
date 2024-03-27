@@ -52,3 +52,17 @@ func OverloadRequest(msg string) Response {
 		Message: msg,
 	}
 }
+
+func Unauthorized(msg string) Response {
+	return Response{
+		Code:    401,
+		Message: msg,
+	}
+}
+
+func Forbidden(msg string) Response {
+	return Response{
+		Code:    403,
+		Message: msg,
+	}
+}

@@ -11,6 +11,7 @@ type Cart struct {
 }
 
 type Updates struct {
-	MethodType string `json:"method_type" form:"method_type"`
-	Address    string `json:"address" form:"address"`
+	MethodType     string `json:"method_type" form:"method_type"`
+	Address        string `json:"address" form:"address"`
+	RequestCurreny string `json:"request_currency" form:"request_currenty"`
 }

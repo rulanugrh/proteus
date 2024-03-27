@@ -23,13 +23,7 @@ func CartRepository(client *config.Postgres) CartInterface {
 	return &cart{client: client}
 }
 
-func(c *cart) AddToCart(req entity.Cart) error {
-	var model entity.Product
-	find := c.client.DB.Where("id = ?", req.ProductID).Find(&model)
-	if find.RowsAffected == 0 {
-		return constant.NotFound("sorry product by this id not found")
-	}
-	
+func (c *cart) AddToCart(req entity.Cart) error {
 	err := c.client.DB.Create(&req).Error
 	if err != nil {
 		return constant.InternalServerError("error while created cart", err)
@@ -38,7 +32,7 @@ func(c *cart) AddToCart(req entity.Cart) error {
 	return nil
 }
 
-func(c *cart) ListCart(userID uint) (*[]entity.Cart, error) {
+func (c *cart) ListCart(userID uint) (*[]entity.Cart, error) {
 	var response []entity.Cart
 	find := c.client.DB.Where("user_id = ?", userID).Preload("Product").Find(&response)
 	if find.RowsAffected == 0 {
@@ -48,10 +42,10 @@ func(c *cart) ListCart(userID uint) (*[]entity.Cart, error) {
 	return &response, nil
 }
 
-func(c *cart) ProcessCart(id uint, updates entity.Updates) (*entity.Order, error)  {
+func (c *cart) ProcessCart(id uint, updates entity.Updates) (*entity.Order, error) {
 	var model entity.Cart
 	find := c.client.DB.Where("id = ?", id).Find(&model)
-	
+
 	if find.RowsAffected == 0 {
 		return nil, constant.NotFound("sorry cart with this id not found")
 	}
@@ -63,6 +57,7 @@ func(c *cart) ProcessCart(id uint, updates entity.Updates) (*entity.Order, error
 	order.Quantity = model.Quantity
 	order.Address = updates.Address
 	order.MethodPayment = updates.MethodType
+	order.RequestCurreny = updates.RequestCurreny
 
 	err_create := c.client.DB.Create(&order).Error
 	if err_create != nil {
@@ -77,7 +72,7 @@ func(c *cart) ProcessCart(id uint, updates entity.Updates) (*entity.Order, error
 	return &order, nil
 }
 
-func(c *cart) Update(id uint, req entity.Cart) error {
+func (c *cart) Update(id uint, req entity.Cart) error {
 	var updates entity.Cart
 
 	err := c.client.DB.Model(&req).Where("id = ?", id).Updates(&updates).Error
@@ -88,7 +83,7 @@ func(c *cart) Update(id uint, req entity.Cart) error {
 	return nil
 }
 
-func(c *cart) Delete(id uint) error {
+func (c *cart) Delete(id uint) error {
 	var model entity.Cart
 
 	err := c.client.DB.Where("id = ?", id).Delete(&model).Error

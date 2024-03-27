@@ -34,6 +34,14 @@ type App struct {
 		FailureURL string
 		CancelURL string
 	}
+
+	MongoDB struct {
+		User string
+		Pass string
+		Port string
+		Host string
+		Name string
+	}
 }
 
 var app *App
@@ -88,6 +96,13 @@ func initConfig() *App {
 	conf.Xendit.SuccessURL = os.Getenv("XENDIT_SUCCESS_URL")
 	conf.Xendit.FailureURL = os.Getenv("XENDIT_FAILURE_URL")
 	conf.Xendit.CancelURL = os.Getenv("XENDIT_CANCEL_URL")
+
+	conf.MongoDB.Pass = os.Getenv("MONGODB_PASS")
+	conf.MongoDB.User = os.Getenv("MONGODB_USER")
+	conf.MongoDB.Host = os.Getenv("MONGODB_HOST")
+	conf.MongoDB.Port = os.Getenv("MONGODB_PORT")
+	conf.MongoDB.Name = os.Getenv("MONGODB_NAME")
+
 
 	return &conf
 }

@@ -2,11 +2,14 @@ package pkg
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/rulanugrh/order/internal/config"
+	"github.com/rulanugrh/order/internal/entity"
+	"github.com/rulanugrh/order/internal/repository"
 	"github.com/rulanugrh/order/internal/util/constant"
 )
 
@@ -16,10 +19,14 @@ type RabbitMQInterface interface {
 
 type rabbit struct {
 	client *config.RabbitMQ
+	db repository.ProductInterface
 }
 
-func RabbitMQ(client *config.RabbitMQ) RabbitMQInterface {
-	return &rabbit{client: client}
+func RabbitMQ(client *config.RabbitMQ, db repository.ProductInterface) RabbitMQInterface {
+	return &rabbit{
+		client: client,
+		db: db,
+	}
 }
 
 
@@ -59,6 +66,39 @@ func (r *rabbit) Publisher(name string, data []byte, exchange string, exchangeTy
 
 }
 
-func (r *rabbit) CatchProduct() {
+func (r *rabbit) CatchProduct() error {
+	log.Println("[*] Declare Queue for Catch Created Product")
+	
+	queue, err_queue := r.client.Channel.QueueDeclare("product-create", true, false, false, false, nil)
+	if err_queue != nil {
+		return constant.InternalServerError("error declaring queue for catch create product", err_queue)
+	}
 
+	log.Println("[*] Consuming Product Create ...")
+	message, err_message := r.client.Channel.Consume(queue.Name, "", true, false, false, false, nil)
+	if err_message != nil {
+		return constant.InternalServerError("error consume for product-create", err_message)
+	}
+
+	var response chan struct{}
+	go func ()  {
+		for msg := range message {
+			log.Println("[*] Success Receive Message")
+			var payload entity.Product
+			err := json.Unmarshal(msg.Body, &payload)
+			if err != nil {
+				log.Printf("error marshaling response: %s", err.Error())
+			}
+			
+			err_created := r.db.Create(payload)
+			if err_created != nil {
+				log.Printf("error create, because: %s", err_created.Error())
+			}
+
+		}
+	}()
+
+	log.Println("[*] Success Consume")
+	<-response
+	return nil
 }

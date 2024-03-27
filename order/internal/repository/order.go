@@ -25,12 +25,6 @@ func(o *order) Create(req entity.Order) (*entity.Order, error) {
 	req.Status = "not paid"
 	req.UUID = util.GenerateUUID()
 
-	var product entity.Product
-	err_find := o.client.DB.Where("id = ?", req.ProductID).Find(&product)
-	if err_find.RowsAffected == 0 {
-		return nil, constant.NotFound("sorry product with this id not found")
-	}
-
 	err := o.client.DB.Create(&req).Error
 	if err != nil {
 		return nil, constant.InternalServerError("sorry cannot create order", err)

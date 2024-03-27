@@ -29,8 +29,8 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 	pay := payment_request.PaymentRequestParameters{
 		ReferenceId: &req.UUID,
 		Currency:    payment_request.PaymentRequestCurrency(req.RequestCurreny),
-		Items: append([]payment_request.PaymentRequestBasketItem{},
-			payment_request.PaymentRequestBasketItem{
+		Items: []payment_request.PaymentRequestBasketItem{
+			{
 				Name:        req.Product.Name,
 				Description: &req.Product.Description,
 				Quantity:    float64(req.Quantity),
@@ -38,7 +38,7 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 				Currency:    req.RequestCurreny,
 				ReferenceId: &productID,
 			},
-		),
+		},
 		Customer: map[string]interface{}{
 			"id": req.UserID,
 			"address": req.Address,

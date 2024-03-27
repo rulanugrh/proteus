@@ -28,6 +28,12 @@ type App struct {
 		User string
 		Pass string
 	}
+	
+	Xendit struct {
+		SuccessURL string
+		FailureURL string
+		CancelURL string
+	}
 }
 
 var app *App
@@ -78,6 +84,10 @@ func initConfig() *App {
 	conf.RabbitMQ.Port = os.Getenv("RABBITMQ_PORT")
 	conf.RabbitMQ.User = os.Getenv("RABBITMQ_USER")
 	conf.RabbitMQ.Pass = os.Getenv("RABBITMQ_PASS")
+
+	conf.Xendit.SuccessURL = os.Getenv("XENDIT_SUCCESS_URL")
+	conf.Xendit.FailureURL = os.Getenv("XENDIT_FAILURE_URL")
+	conf.Xendit.CancelURL = os.Getenv("XENDIT_CANCEL_URL")
 
 	return &conf
 }

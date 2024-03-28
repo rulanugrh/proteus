@@ -19,6 +19,9 @@ $ cp product/.env.example product/.env
 
 # user service
 $ cp user/.env.example user/.env
+
+# order service
+$ cp order/.env.example order/.env
 ```
 
 Next, you can run the program with `build.sh` file

@@ -26,7 +26,7 @@ then
     exit 0
 else if [[ $command == "build" ]]
 then
-    docker compose up -d db-product && docker compose up -d db-user && docker compose up -d
+    docker compose up -d db-product && docker compose up -d db-user && docker compose up -d db-order && docker compose up -d
     exit
 else
     echo "sorry invalid command"

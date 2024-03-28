@@ -42,7 +42,9 @@ message Order {
     string method_payment = 6;
     string address = 7;
     string requst_currency = 9;
-    optional string paid = 10;
+    string mobile_phone = 10;
+    string channel_code = 11;
+    optional string paid = 12;
 }
 
 // schema for response proccess in API

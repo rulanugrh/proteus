@@ -29,6 +29,8 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 		MethodPayment: req.Req.GetMethodPayment(),
 		Address: req.Req.GetAddress(),
 		RequestCurreny: req.Req.RequstCurrency,
+		MobilePhone: req.Req.MobilePhone,
+		ChannelCode: req.Req.ChannelCode,
 	}
 
 	data, find := o.product.FindID(uint(req.Req.ProductId))

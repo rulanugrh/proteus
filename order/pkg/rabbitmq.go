@@ -19,16 +19,15 @@ type RabbitMQInterface interface {
 
 type rabbit struct {
 	client *config.RabbitMQ
-	db repository.ProductInterface
+	db     repository.ProductInterface
 }
 
 func RabbitMQ(client *config.RabbitMQ, db repository.ProductInterface) RabbitMQInterface {
 	return &rabbit{
 		client: client,
-		db: db,
+		db:     db,
 	}
 }
-
 
 func (r *rabbit) Publisher(name string, data []byte, exchange string, exchangeType string, username string) error {
 	log.Println("[*] Declaring Exchange...")
@@ -52,9 +51,9 @@ func (r *rabbit) Publisher(name string, data []byte, exchange string, exchangeTy
 	log.Println("[*] Publisher with context ...")
 	err_pub := r.client.Channel.PublishWithContext(context.Background(), exchange, queue.Name, false, false, amqp091.Publishing{
 		ContentType: "application/json",
-		Body: data,
-		Timestamp: time.Now(),
-		UserId: username,
+		Body:        data,
+		Timestamp:   time.Now(),
+		UserId:      username,
 	})
 
 	if err_pub != nil {
@@ -68,7 +67,7 @@ func (r *rabbit) Publisher(name string, data []byte, exchange string, exchangeTy
 
 func (r *rabbit) CatchProduct() error {
 	log.Println("[*] Declare Queue for Catch Created Product")
-	
+
 	queue, err_queue := r.client.Channel.QueueDeclare("product-create", true, false, false, false, nil)
 	if err_queue != nil {
 		return constant.InternalServerError("error declaring queue for catch create product", err_queue)
@@ -81,7 +80,7 @@ func (r *rabbit) CatchProduct() error {
 	}
 
 	var response chan struct{}
-	go func ()  {
+	go func() {
 		for msg := range message {
 			log.Println("[*] Success Receive Message")
 			var payload entity.Product
@@ -89,7 +88,7 @@ func (r *rabbit) CatchProduct() error {
 			if err != nil {
 				log.Printf("error marshaling response: %s", err.Error())
 			}
-			
+
 			err_created := r.db.Create(payload)
 			if err_created != nil {
 				log.Printf("error create, because: %s", err_created.Error())
@@ -125,7 +124,7 @@ func (r *rabbit) UpdateProduct() error {
 			if err != nil {
 				log.Printf("error marshaling response: %s", err.Error())
 			}
-			
+
 			err_update := r.db.Update(payload.ID, payload)
 			if err_update != nil {
 				log.Printf("error create, because: %s", err_update.Error())

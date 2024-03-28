@@ -13,7 +13,7 @@ import (
 )
 
 type XenditInterface interface {
-	PaymentRequest(req entity.Order, username string, product_name string, product_desc string, product_price float64) (*payment_request.PaymentRequest, error) 
+	PaymentRequest(req entity.Order, username string, product_name string, product_desc string, product_price float64) (*payment_request.PaymentRequest, error)
 }
 
 type xendit struct {
@@ -88,13 +88,13 @@ func (x *xendit) paymentMethod(uuid string, method string, channel_code string, 
 			Type:        payment_request.PaymentMethodType(method),
 			Reusability: payment_request.PAYMENTMETHODREUSABILITY_ONE_TIME_USE,
 			ReferenceId: &uuid,
-			QrCode:    *payment_request.NewNullableQRCodeParameters(x.qrcode(channel_code)),
+			QrCode:      *payment_request.NewNullableQRCodeParameters(x.qrcode(channel_code)),
 		}
 	} else if method == "VA" {
 		request = &payment_request.PaymentMethodParameters{
-			Type:        payment_request.PaymentMethodType(method),
-			Reusability: payment_request.PAYMENTMETHODREUSABILITY_ONE_TIME_USE,
-			ReferenceId: &uuid,
+			Type:           payment_request.PaymentMethodType(method),
+			Reusability:    payment_request.PAYMENTMETHODREUSABILITY_ONE_TIME_USE,
+			ReferenceId:    &uuid,
 			VirtualAccount: *payment_request.NewNullableVirtualAccountParameters(x.virtual_account(channel_code, customer)),
 		}
 	}
@@ -155,7 +155,7 @@ func (x *xendit) qrcode(channel_code string) (response *payment_request.QRCodePa
 		response = &payment_request.QRCodeParameters{
 			ChannelCode: *payment_request.NewNullableQRCodeChannelCode(payment_request.QRCODECHANNELCODE_QRIS.Ptr()),
 			ChannelProperties: &payment_request.QRCodeChannelProperties{
-				QrString: &payment_request.NewCaptureWithDefaults().PaymentRequestId,
+				QrString:  &payment_request.NewCaptureWithDefaults().PaymentRequestId,
 				ExpiresAt: &expire,
 			},
 		}
@@ -163,7 +163,7 @@ func (x *xendit) qrcode(channel_code string) (response *payment_request.QRCodePa
 		response = &payment_request.QRCodeParameters{
 			ChannelCode: *payment_request.NewNullableQRCodeChannelCode(payment_request.QRCODECHANNELCODE_DANA.Ptr()),
 			ChannelProperties: &payment_request.QRCodeChannelProperties{
-				QrString: &payment_request.NewCaptureWithDefaults().PaymentRequestId,
+				QrString:  &payment_request.NewCaptureWithDefaults().PaymentRequestId,
 				ExpiresAt: &expire,
 			},
 		}
@@ -179,7 +179,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_BRI,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "BCA" {
@@ -187,7 +187,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_BCA,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "BNI" {
@@ -195,7 +195,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_BNI,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "MANDIRI" {
@@ -203,7 +203,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_MANDIRI,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "PERMATA" {
@@ -211,7 +211,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_PERMATA,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "BJB" {
@@ -219,7 +219,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_BJB,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	} else if channel_code == "BSI" {
@@ -227,7 +227,7 @@ func (x *xendit) virtual_account(channel_code string, customer string) (response
 			ChannelCode: payment_request.VIRTUALACCOUNTCHANNELCODE_BSI,
 			ChannelProperties: payment_request.VirtualAccountChannelProperties{
 				CustomerName: customer,
-				ExpiresAt: &expire,
+				ExpiresAt:    &expire,
 			},
 		}
 	}

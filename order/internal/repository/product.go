@@ -6,6 +6,7 @@ import (
 
 	"github.com/rulanugrh/order/internal/config"
 	"github.com/rulanugrh/order/internal/entity"
+	"github.com/rulanugrh/order/internal/util/constant"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -45,7 +46,7 @@ func(p *product) FindID(id uint) (*entity.Product, error) {
 
 	err := p.client.FindOne(ctx, bson.M{"id": id}).Decode(&response)
 	if err != nil {
-		return nil, err
+		return nil, constant.NotFound("sorry product with this id not found")
 	}
 
 	return &response, nil

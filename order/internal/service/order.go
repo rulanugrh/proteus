@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/rulanugrh/order/internal/entity"
@@ -17,10 +18,11 @@ type OrderServiceServer struct {
 	repository repository.OrderInterface
 	product    repository.ProductInterface
 	xendit     pkg.XenditInterface
+	rabbitmq pkg.RabbitMQInterface
 }
 
-func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface) *OrderServiceServer {
-	return &OrderServiceServer{repository: repository, product: product, xendit: xendit}
+func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface, rabbitmq pkg.RabbitMQInterface) *OrderServiceServer {
+	return &OrderServiceServer{repository: repository, product: product, xendit: xendit, rabbitmq: rabbitmq}
 }
 
 func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*order.ResponseProccess, error) {
@@ -56,6 +58,14 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 		Price:         int64(data.Price),
 		MethodPayment: result.MethodPayment,
 		Address:       result.Address,
+		Fname: token.Username,
+	}
+
+	marshalling, _ := json.Marshal(&response)
+
+	err_publisher := o.rabbitmq.Publisher("order-create", marshalling, "order", "topic", token.Username)
+	if err_publisher != nil {
+		return util.InternalServerErrorOrderCreate(err_publisher.Error()), err_publisher
 	}
 
 	return util.SuccessOrderCreate("success create order", &response), nil
@@ -74,12 +84,12 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 
 	product, err_product := o.product.FindID(data.ProductID)
 	if err_product != nil {
-		return util.BadRequestOrderCheckout(err_product.Error()), err
+		return util.BadRequestOrderCheckout(err_product.Error()), err_product
 	}
 
 	payment, err_payment := o.xendit.PaymentRequest(*data, token.Username, product.Name, product.Description, float64(product.Price))
 	if err_payment != nil {
-		return util.BadRequestOrderCheckout(err_payment.Error()), err
+		return util.BadRequestOrderCheckout(err_payment.Error()), err_payment
 	}
 
 	response := order.CheckOut{
@@ -106,6 +116,13 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 	err_save := o.repository.SaveTransaction(transaction)
 	if err_save != nil {
 		log.Println("[*] Error saving record transaction into DB: ", err_save)
+	}
+
+	marshalling, _ := json.Marshal(&response)
+
+	err_publisher := o.rabbitmq.Publisher("order-checkout", marshalling, "order", "topic", token.Username)
+	if err_publisher != nil {
+		return util.BadRequestOrderCheckout(err_publisher.Error()), err_publisher
 	}
 
 	return util.SuccessOrderCheckout("success checkout order", &response), nil

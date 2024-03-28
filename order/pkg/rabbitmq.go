@@ -15,6 +15,8 @@ import (
 
 type RabbitMQInterface interface {
 	Publisher(name string, data []byte, exchange string, exchangeType string, username string) error
+	UpdateProduct() error
+	CatchProduct() error
 }
 
 type rabbit struct {

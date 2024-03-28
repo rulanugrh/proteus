@@ -65,30 +65,46 @@ func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer,
 }
 
 func main() {
+	// Main config for Xendit and Config App
 	conf := config.GetConfig()
-
 	xenditAPI := xendit.NewClient(conf.Xendit.APIKey)
+	xendit := pkg.XenditPluggin(xenditAPI, conf)
+
+	// Config for Postgres
 	postgres := config.InitializeDB(conf)
 	postgres.StartConnection()
 	postgres.Migrate()
 
+	// Config For MongoDB
 	mongo := config.InitializeMongo(conf)
 	mongo.NewMongo()
 
-	xendit := pkg.XenditPluggin(xenditAPI, conf)
-
+	// Config for rabbitMQ and Run Consume
 	rabbitmq := config.InitializeRabbit(conf)
 	rabbitmq.InitRabbit()
 
 	productRepository := repository.ProductRepository(mongo, conf)
 	orderRepository := repository.OrderRepository(postgres)
 	cartRepository := repository.CartRepository(postgres)
+	
+	// Confsume for Product Catch and Update
+	rabbimq := pkg.RabbitMQ(rabbitmq, productRepository)
+	err_catch := rabbimq.CatchProduct()
+	if err_catch != nil {
+		log.Println("[*] Error consume catch product: ", err_catch)
+	}
 
-	orderService := service.OrderService(orderRepository, productRepository, xendit)
+	err_update := rabbimq.UpdateProduct()
+	if err_update != nil {
+		log.Println("[*] Error consume update product: ", err_update)
+
+	}
+
+	// Running Services and Listener GRPC and REST
+	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq)
 	cartService := service.CartService(cartRepository, productRepository)
 
 	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPC)
-
 	listener, err := net.Listen("tcp", dsnGRPC)
 	if err != nil {
 		log.Println("[*] Error binding network", err)

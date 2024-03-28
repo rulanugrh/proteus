@@ -91,7 +91,20 @@ services:
       - tokoku
     depends_on:
       - db-user
-    
+  
+  rabbitmq:
+    image: rabbitmq:3.13.0-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    networks:
+      - tokoku
+
 networks:
   tokoku:
     driver: bridge

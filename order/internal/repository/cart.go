@@ -58,6 +58,8 @@ func (c *cart) ProcessCart(id uint, updates entity.Updates) (*entity.Order, erro
 	order.Address = updates.Address
 	order.MethodPayment = updates.MethodType
 	order.RequestCurreny = updates.RequestCurreny
+	order.ChannelCode = updates.ChannelCode
+	order.MobilePhone = updates.MobilePhone
 
 	err_create := c.client.DB.Create(&order).Error
 	if err_create != nil {

@@ -77,7 +77,7 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 		return util.BadRequestOrderCheckout(err_product.Error()), err
 	}
 
-	payment, err_payment := o.xendit.PaymentRequest(*data, token.Username)
+	payment, err_payment := o.xendit.PaymentRequest(*data, token.Username, product.Name, product.Description, float64(product.Price))
 	if err_payment != nil {
 		return util.BadRequestOrderCheckout(err_payment.Error()), err
 	}

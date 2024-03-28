@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -27,7 +28,7 @@ type CartServiceClient interface {
 	// for update cart
 	Update(ctx context.Context, in *RequestUpdate, opts ...grpc.CallOption) (*Response, error)
 	// for endpoint listcart
-	ListCart(ctx context.Context, in *ID, opts ...grpc.CallOption) (CartService_ListCartClient, error)
+	ListCart(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (CartService_ListCartClient, error)
 	// for endpoint delete cart
 	DeleteCart(ctx context.Context, in *ID, opts ...grpc.CallOption) (*Response, error)
 	// for endpoint process from cart
@@ -60,7 +61,7 @@ func (c *cartServiceClient) Update(ctx context.Context, in *RequestUpdate, opts 
 	return out, nil
 }
 
-func (c *cartServiceClient) ListCart(ctx context.Context, in *ID, opts ...grpc.CallOption) (CartService_ListCartClient, error) {
+func (c *cartServiceClient) ListCart(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (CartService_ListCartClient, error) {
 	stream, err := c.cc.NewStream(ctx, &CartService_ServiceDesc.Streams[0], "/cart.CartService/ListCart", opts...)
 	if err != nil {
 		return nil, err
@@ -76,7 +77,7 @@ func (c *cartServiceClient) ListCart(ctx context.Context, in *ID, opts ...grpc.C
 }
 
 type CartService_ListCartClient interface {
-	Recv() (*Data, error)
+	Recv() (*CartList, error)
 	grpc.ClientStream
 }
 
@@ -84,8 +85,8 @@ type cartServiceListCartClient struct {
 	grpc.ClientStream
 }
 
-func (x *cartServiceListCartClient) Recv() (*Data, error) {
-	m := new(Data)
+func (x *cartServiceListCartClient) Recv() (*CartList, error) {
+	m := new(CartList)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ type CartServiceServer interface {
 	// for update cart
 	Update(context.Context, *RequestUpdate) (*Response, error)
 	// for endpoint listcart
-	ListCart(*ID, CartService_ListCartServer) error
+	ListCart(*emptypb.Empty, CartService_ListCartServer) error
 	// for endpoint delete cart
 	DeleteCart(context.Context, *ID) (*Response, error)
 	// for endpoint process from cart
@@ -137,7 +138,7 @@ func (UnimplementedCartServiceServer) AddToCart(context.Context, *Request) (*Res
 func (UnimplementedCartServiceServer) Update(context.Context, *RequestUpdate) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedCartServiceServer) ListCart(*ID, CartService_ListCartServer) error {
+func (UnimplementedCartServiceServer) ListCart(*emptypb.Empty, CartService_ListCartServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCart not implemented")
 }
 func (UnimplementedCartServiceServer) DeleteCart(context.Context, *ID) (*Response, error) {
@@ -196,7 +197,7 @@ func _CartService_Update_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _CartService_ListCart_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ID)
+	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -204,7 +205,7 @@ func _CartService_ListCart_Handler(srv interface{}, stream grpc.ServerStream) er
 }
 
 type CartService_ListCartServer interface {
-	Send(*Data) error
+	Send(*CartList) error
 	grpc.ServerStream
 }
 
@@ -212,7 +213,7 @@ type cartServiceListCartServer struct {
 	grpc.ServerStream
 }
 
-func (x *cartServiceListCartServer) Send(m *Data) error {
+func (x *cartServiceListCartServer) Send(m *CartList) error {
 	return x.ServerStream.SendMsg(m)
 }
 

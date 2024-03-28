@@ -16,5 +16,4 @@ type Order struct {
 	Address        string  `json:"address" form:"address" validate:"required"`
 	ChannelCode    string  `json:"channel_code" form:"channel_code" validate:"required"`
 	MobilePhone    string  `json:"mobil_phone" form:"mobile_phone"`
-	Product        Product `json:"product" form:"product" gorm:"foreignKey:ProductID;references:ID"`
 }

@@ -13,7 +13,7 @@ import (
 )
 
 type XenditInterface interface {
-	PaymentRequest(req entity.Order, username string) (*payment_request.PaymentRequest, error)
+	PaymentRequest(req entity.Order, username string, product_name string, product_desc string, product_price float64) (*payment_request.PaymentRequest, error) 
 }
 
 type xendit struct {
@@ -25,17 +25,17 @@ func XenditPluggin(client *xdt.APIClient, conf *config.App) XenditInterface {
 	return &xendit{client: client, conf: conf}
 }
 
-func (x *xendit) PaymentRequest(req entity.Order, username string) (*payment_request.PaymentRequest, error) {
+func (x *xendit) PaymentRequest(req entity.Order, username string, product_name string, product_desc string, product_price float64) (*payment_request.PaymentRequest, error) {
 	productID := strconv.Itoa(int(req.ProductID))
 	pay := payment_request.PaymentRequestParameters{
 		ReferenceId: &req.UUID,
 		Currency:    payment_request.PaymentRequestCurrency(req.RequestCurreny),
 		Items: []payment_request.PaymentRequestBasketItem{
 			{
-				Name:        req.Product.Name,
-				Description: &req.Product.Description,
+				Name:        product_name,
+				Description: &product_desc,
 				Quantity:    float64(req.Quantity),
-				Price:       float64(req.Product.Price),
+				Price:       float64(product_price),
 				Currency:    req.RequestCurreny,
 				ReferenceId: &productID,
 			},
@@ -46,7 +46,7 @@ func (x *xendit) PaymentRequest(req entity.Order, username string) (*payment_req
 		},
 		Metadata: map[string]interface{}{
 			"type":     "pay",
-			"product":  req.Product.Name,
+			"product":  product_name,
 			"quantity": req.Quantity,
 		},
 		PaymentMethod: x.paymentMethod(req.UUID, req.MethodPayment, req.ChannelCode, req.MobilePhone, username),

@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
 	"github.com/rulanugrh/order/internal/config"
 	"github.com/rulanugrh/order/internal/grpc/cart"
@@ -34,6 +38,32 @@ func grpcServer(crt *service.CartServiceServer, ord *service.OrderServiceServer,
 	return serve.Serve(nets)
 }
 
+func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer, conf *config.App) error {
+	mux := runtime.NewServeMux()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err := cart.RegisterCartServiceHandlerServer(ctx, mux, crt)
+	if err != nil {
+		return err
+	}
+
+	err = order.RegisterOrderServiceHandlerServer(ctx, mux, ord)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[*] Start HTTP Server at %s:%s", conf.Server.Host, conf.Server.HTTP)
+	dsnHTTP := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.HTTP)
+
+	serv := http.Server{
+		Addr: dsnHTTP,
+		Handler: mux,
+	}
+	
+	return serv.ListenAndServe()
+}
+
 func main() {
 	conf := config.GetConfig()
 
@@ -58,6 +88,7 @@ func main() {
 	cartService := service.CartService(cartRepository, productRepository)
 
 	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPC)
+
 	listener, err := net.Listen("tcp", dsnGRPC)
 	if err != nil {
 		log.Println("[*] Error binding network", err)
@@ -66,5 +97,11 @@ func main() {
 	err_grpc := grpcServer(cartService, orderService, conf, listener)
 	if err_grpc != nil {
 		log.Println("[*] Error Running GRPC: ", err_grpc)
+	}
+
+	err_http := restServer(cartService, orderService, conf)
+	if err_http != nil {
+		log.Println("[*] Error Running HTTP: ", err_http)
+
 	}
 }

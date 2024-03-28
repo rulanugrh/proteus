@@ -28,11 +28,12 @@ type App struct {
 		User string
 		Pass string
 	}
-	
+
 	Xendit struct {
 		SuccessURL string
 		FailureURL string
-		CancelURL string
+		CancelURL  string
+		APIKey     string
 	}
 
 	MongoDB struct {
@@ -68,7 +69,7 @@ func initConfig() *App {
 		conf.Database.User = "user"
 		conf.Database.Pass = "user"
 		conf.Database.Name = "order.db"
-		
+
 		conf.RabbitMQ.Host = "localhost"
 		conf.RabbitMQ.Pass = "password"
 		conf.RabbitMQ.User = "user"
@@ -96,13 +97,13 @@ func initConfig() *App {
 	conf.Xendit.SuccessURL = os.Getenv("XENDIT_SUCCESS_URL")
 	conf.Xendit.FailureURL = os.Getenv("XENDIT_FAILURE_URL")
 	conf.Xendit.CancelURL = os.Getenv("XENDIT_CANCEL_URL")
+	conf.Xendit.APIKey = os.Getenv("XENDIT_API_KEY")
 
 	conf.MongoDB.Pass = os.Getenv("MONGODB_PASS")
 	conf.MongoDB.User = os.Getenv("MONGODB_USER")
 	conf.MongoDB.Host = os.Getenv("MONGODB_HOST")
 	conf.MongoDB.Port = os.Getenv("MONGODB_PORT")
 	conf.MongoDB.Name = os.Getenv("MONGODB_NAME")
-
 
 	return &conf
 }

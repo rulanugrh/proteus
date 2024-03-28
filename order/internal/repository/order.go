@@ -11,6 +11,7 @@ type OrderInterface interface {
 	Create(req entity.Order) (*entity.Order, error)
 	Checkout(uuid string)  (*entity.Order, error)
 	Update(uuid string, status string) error
+	SaveTransaction(req entity.Transaction) error
 }
 
 type order struct {

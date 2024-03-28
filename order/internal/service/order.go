@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/rulanugrh/order/internal/entity"
 	"github.com/rulanugrh/order/internal/grpc/order"
@@ -14,8 +15,8 @@ import (
 type OrderServiceServer struct {
 	order.UnimplementedOrderServiceServer
 	repository repository.OrderInterface
-	product repository.ProductInterface
-	xendit pkg.XenditInterface
+	product    repository.ProductInterface
+	xendit     pkg.XenditInterface
 }
 
 func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface) *OrderServiceServer {
@@ -29,14 +30,14 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 	}
 
 	input := entity.Order{
-		UserID: token.ID,
-		ProductID: uint(req.Req.GetProductId()),
-		Quantity: uint(req.Req.GetQuantity()),
-		MethodPayment: req.Req.GetMethodPayment(),
-		Address: req.Req.GetAddress(),
+		UserID:         token.ID,
+		ProductID:      uint(req.Req.GetProductId()),
+		Quantity:       uint(req.Req.GetQuantity()),
+		MethodPayment:  req.Req.GetMethodPayment(),
+		Address:        req.Req.GetAddress(),
 		RequestCurreny: req.Req.RequstCurrency,
-		MobilePhone: req.Req.MobilePhone,
-		ChannelCode: req.Req.ChannelCode,
+		MobilePhone:    req.Req.MobilePhone,
+		ChannelCode:    req.Req.ChannelCode,
 	}
 
 	data, find := o.product.FindID(uint(req.Req.ProductId))
@@ -50,11 +51,11 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 	}
 
 	response := order.Data{
-		Uuid: result.UUID,
-		ProductName: data.Name,
-		Price: int64(data.Price),
+		Uuid:          result.UUID,
+		ProductName:   data.Name,
+		Price:         int64(data.Price),
 		MethodPayment: result.MethodPayment,
-		Address: result.Address,
+		Address:       result.Address,
 	}
 
 	return util.SuccessOrderCreate("success create order", &response), nil
@@ -83,10 +84,28 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 
 	response := order.CheckOut{
 		ProductName: product.Name,
-		Price: int64(product.Price),
-		Quantity: int64(data.Quantity),
-		Total: (int64(data.Quantity) * int64(product.Price)),
+		Price:       int64(product.Price),
+		Quantity:    int64(data.Quantity),
+		Total:       (int64(data.Quantity) * int64(product.Price)),
 		LinkPayment: payment.GetCreated(),
+	}
+
+	transaction := entity.Transaction{
+		OrderID:                data.ID,
+		OrderUUID:              data.UUID,
+		MethodPayment:          data.MethodPayment,
+		Status:                 string(payment.Status),
+		PaymentCreated:         payment.Created,
+		PaymentUpdated:         payment.Updated,
+		PaymentRequestCurrency: payment.Currency.String(),
+		PaymentID:              payment.Id,
+		Amount:                 *payment.Amount,
+		ReferenceID:            payment.ReferenceId,
+	}
+
+	err_save := o.repository.SaveTransaction(transaction)
+	if err_save != nil {
+		log.Println("[*] Error saving record transaction into DB: ", err_save)
 	}
 
 	return util.SuccessOrderCheckout("success checkout order", &response), nil

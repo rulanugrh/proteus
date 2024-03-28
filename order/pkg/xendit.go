@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/rulanugrh/order/internal/config"
 	"github.com/rulanugrh/order/internal/entity"
@@ -40,7 +41,7 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 			},
 		},
 		Customer: map[string]interface{}{
-			"id": req.UserID,
+			"id":      req.UserID,
 			"address": req.Address,
 		},
 		Metadata: map[string]interface{}{
@@ -48,11 +49,7 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 			"product":  req.Product.Name,
 			"quantity": req.Quantity,
 		},
-		PaymentMethod: &payment_request.PaymentMethodParameters{
-			Type:        payment_request.PaymentMethodType(req.MethodPayment),
-			ReferenceId: &productID,
-			Reusability: payment_request.PaymentMethodReusability("ONE_TIME_USE"),
-		},
+		PaymentMethod: x.paymentMethod(req.UUID, req.MethodPayment, req.ChannelCode, req.MobilePhone),
 		ChannelProperties: &payment_request.PaymentRequestParametersChannelProperties{
 			FailureReturnUrl: &x.conf.Xendit.FailureURL,
 			SuccessReturnUrl: &x.conf.Xendit.SuccessURL,
@@ -76,4 +73,94 @@ func (x *xendit) PaymentRequest(req entity.Order) (*payment_request.PaymentReque
 		return response, nil
 	}
 
+}
+
+func (x *xendit) paymentMethod(uuid string, method string, channel_code string, mobile_phone string) (request *payment_request.PaymentMethodParameters) {
+	if method == "EWALLET" {
+		request = &payment_request.PaymentMethodParameters{
+			Type:        payment_request.PaymentMethodType(method),
+			Reusability: payment_request.PAYMENTMETHODREUSABILITY_ONE_TIME_USE,
+			ReferenceId: &uuid,
+			Ewallet:     *payment_request.NewNullableEWalletParameters(x.ewallet(mobile_phone, channel_code)),
+		}
+	} else if method == "QRIS" {
+		request = &payment_request.PaymentMethodParameters{
+			Type:        payment_request.PaymentMethodType(method),
+			Reusability: payment_request.PAYMENTMETHODREUSABILITY_ONE_TIME_USE,
+			ReferenceId: &uuid,
+			QrCode:    *payment_request.NewNullableQRCodeParameters(x.qrcode(channel_code)),
+		}
+	}
+
+	return request
+}
+
+func (x *xendit) ewallet(mobile_phone string, channel_code string) (ewallet *payment_request.EWalletParameters) {
+
+	if channel_code == "DANA" {
+		ewallet = &payment_request.EWalletParameters{
+			ChannelCode: payment_request.EWALLETCHANNELCODE_DANA.Ptr(),
+			ChannelProperties: &payment_request.EWalletChannelProperties{
+				SuccessReturnUrl: &x.conf.Xendit.SuccessURL,
+				FailureReturnUrl: &x.conf.Xendit.FailureURL,
+				CancelReturnUrl:  &x.conf.Xendit.CancelURL,
+				MobileNumber:     &mobile_phone,
+			},
+		}
+	} else if channel_code == "GOPAY" {
+		ewallet = &payment_request.EWalletParameters{
+			ChannelCode: payment_request.EWALLETCHANNELCODE_GCASH.Ptr(),
+			ChannelProperties: &payment_request.EWalletChannelProperties{
+				SuccessReturnUrl: &x.conf.Xendit.SuccessURL,
+				FailureReturnUrl: &x.conf.Xendit.FailureURL,
+				CancelReturnUrl:  &x.conf.Xendit.CancelURL,
+				MobileNumber:     &mobile_phone,
+			},
+		}
+	} else if channel_code == "OVO" {
+		ewallet = &payment_request.EWalletParameters{
+			ChannelCode: payment_request.EWALLETCHANNELCODE_OVO.Ptr(),
+			ChannelProperties: &payment_request.EWalletChannelProperties{
+				SuccessReturnUrl: &x.conf.Xendit.SuccessURL,
+				FailureReturnUrl: &x.conf.Xendit.FailureURL,
+				CancelReturnUrl:  &x.conf.Xendit.CancelURL,
+				MobileNumber:     &mobile_phone,
+			},
+		}
+	} else if channel_code == "SHOPEE" {
+		ewallet = &payment_request.EWalletParameters{
+			ChannelCode: payment_request.EWALLETCHANNELCODE_SHOPEEPAY.Ptr(),
+			ChannelProperties: &payment_request.EWalletChannelProperties{
+				SuccessReturnUrl: &x.conf.Xendit.SuccessURL,
+				FailureReturnUrl: &x.conf.Xendit.FailureURL,
+				CancelReturnUrl:  &x.conf.Xendit.CancelURL,
+				MobileNumber:     &mobile_phone,
+			},
+		}
+	}
+
+	return ewallet
+}
+
+func (x *xendit) qrcode(channel_code string) (response *payment_request.QRCodeParameters) {
+	var expire time.Time = time.Now().Add(10 * time.Minute)
+	if channel_code == "QRIS" {
+		response = &payment_request.QRCodeParameters{
+			ChannelCode: *payment_request.NewNullableQRCodeChannelCode(payment_request.QRCODECHANNELCODE_QRIS.Ptr()),
+			ChannelProperties: &payment_request.QRCodeChannelProperties{
+				QrString: &payment_request.NewCaptureWithDefaults().PaymentRequestId,
+				ExpiresAt: &expire,
+			},
+		}
+	} else if channel_code == "DANA" {
+		response = &payment_request.QRCodeParameters{
+			ChannelCode: *payment_request.NewNullableQRCodeChannelCode(payment_request.QRCODECHANNELCODE_DANA.Ptr()),
+			ChannelProperties: &payment_request.QRCodeChannelProperties{
+				QrString: &payment_request.NewCaptureWithDefaults().PaymentRequestId,
+				ExpiresAt: &expire,
+			},
+		}
+	}
+
+	return response
 }

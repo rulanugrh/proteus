@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASS=${DB_PRODUCT_PASS}
       - POSTGRES_DB=${DB_PRODUCT_NAME}
     ports:
-      - "127.0.0.1:5430:5432"
+      - "127.0.0.1:${DB_PRODUCT_PORT}:5432"
     restart: unless-stopped
     networks:
       - tokoku
@@ -23,7 +23,21 @@ services:
       - POSTGRES_PASS=${DB_USER_PASS}
       - POSTGRES_DB=${DB_USER_NAME}
     ports:
-      - "127.0.0.1:5431:5432"
+      - "127.0.0.1:${DB_USER_PORT}:5432"
+    restart: unless-stopped
+    networks:
+      - tokoku
+  
+  db-order:
+    image: postgres:alpine
+    container_name: db-order
+    hostname: db-order
+    environment:
+      - POSTGRES_USER=${DB_ORDER_USER}
+      - POSTGRES_PASS=${DB_ORDER_PASS}
+      - POSTGRES_DB=${DB_ORDER_NAME}
+    ports:
+      - "127.0.0.1:${DB_ORDER_PORT}:5432"
     restart: unless-stopped
     networks:
       - tokoku
@@ -43,6 +57,24 @@ services:
       - tokoku
     depends_on:
       - db-product
+  
+  app-order:
+    build:
+      context: ./order/
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PORT=${HTTP_ORDER_PORT}
+        - GRPC_PORT=${GRPC_ORDER_PORT}
+    env_file:
+      - ./order/.env
+    restart: unless-stopped
+    ports:
+      - ${HTTP_ORDER_PORT}:3000
+      - ${GRPC_ORDER_PORT}:9000
+    networks:
+      - tokoku
+    depends_on:
+      - db-order
 
   app-user:
     build:

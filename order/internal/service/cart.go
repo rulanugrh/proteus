@@ -16,7 +16,7 @@ import (
 type CartServiceServer struct {
 	cart.UnimplementedCartServiceServer
 	repository repository.CartInterface
-	product repository.ProductInterface
+	product    repository.ProductInterface
 }
 
 func CartService(repository repository.CartInterface, product repository.ProductInterface) *CartServiceServer {
@@ -35,9 +35,9 @@ func (c *CartServiceServer) AddToCart(ctx context.Context, req *cart.Request) (*
 	}
 
 	input := entity.Cart{
-		Quantity: uint(req.Req.GetQuantity()),
+		Quantity:  uint(req.Req.GetQuantity()),
 		ProductID: uint(req.Req.GetProductId()),
-		UserID: token.ID,
+		UserID:    token.ID,
 	}
 
 	err_create := c.repository.AddToCart(input)
@@ -80,10 +80,10 @@ func (c *CartServiceServer) ListCart(empty *emptypb.Empty, stream cart.CartServi
 		}
 
 		stream.Send(&cart.CartList{
-			ProductName: product.Name,
-			ProductDesc: product.Description,
+			ProductName:  product.Name,
+			ProductDesc:  product.Description,
 			ProductPrice: uint64(product.Price),
-			Quantity: int32(result.Quantity),
+			Quantity:     int32(result.Quantity),
 		})
 	}
 
@@ -92,11 +92,11 @@ func (c *CartServiceServer) ListCart(empty *emptypb.Empty, stream cart.CartServi
 
 func (c *CartServiceServer) Proccesses(ctx context.Context, req *cart.RequestProcess) (*cart.Created, error) {
 	input := entity.Updates{
-		MethodType: req.Req.GetMethodPayment(),
-		Address: req.Req.GetAddress(),
-		ChannelCode: req.Req.GetChannelCode(),
+		MethodType:     req.Req.GetMethodPayment(),
+		Address:        req.Req.GetAddress(),
+		ChannelCode:    req.Req.GetChannelCode(),
 		RequestCurreny: req.Req.GetRequestCurrency(),
-		MobilePhone: req.Req.GetMobilePhone(),
+		MobilePhone:    req.Req.GetMobilePhone(),
 	}
 
 	data, err := c.repository.ProcessCart(uint(req.Id), input)
@@ -110,18 +110,18 @@ func (c *CartServiceServer) Proccesses(ctx context.Context, req *cart.RequestPro
 	}
 
 	response := cart.Data{
-		Uuid: data.UUID,
-		Quantity: int64(data.Quantity),
+		Uuid:        data.UUID,
+		Quantity:    int64(data.Quantity),
 		ProductName: product.Name,
-		Price: int64(product.Price),
-		Total: int64(product.Price * uint32(data.Quantity)),
+		Price:       int64(product.Price),
+		Total:       int64(product.Price * uint32(data.Quantity)),
 	}
 
 	return util.SuccessCreatedCart("success created for order", &response), nil
 }
 
 func (c *CartServiceServer) Update(ctx context.Context, req *cart.RequestUpdate) (*cart.Response, error) {
-	request := entity.Cart {
+	request := entity.Cart{
 		Quantity: uint(req.Req.GetQuantity()),
 	}
 

@@ -23,6 +23,13 @@ func NotFoundOrderCreate(msg string) *order.ResponseProccess {
 	}
 }
 
+func UnauthorizedCreateOrder(msg string) *order.ResponseProccess {
+	return &order.ResponseProccess{
+		Code: 401,
+		Message: msg,
+	}
+}
+
 func SuccessOrderCreate(msg string, data *order.Data) *order.ResponseProccess {
 	return &order.ResponseProccess{
 		Code: 201,
@@ -34,6 +41,13 @@ func SuccessOrderCreate(msg string, data *order.Data) *order.ResponseProccess {
 func BadRequestOrderCheckout(msg string) *order.ResponseCheckout {
 	return &order.ResponseCheckout{
 		Code: 400,
+		Message: msg,
+	}
+}
+
+func UnauthorizedCheckout(msg string) *order.ResponseCheckout {
+	return &order.ResponseCheckout{
+		Code: 401,
 		Message: msg,
 	}
 }

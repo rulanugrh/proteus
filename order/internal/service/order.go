@@ -5,6 +5,7 @@ import (
 
 	"github.com/rulanugrh/order/internal/entity"
 	"github.com/rulanugrh/order/internal/grpc/order"
+	"github.com/rulanugrh/order/internal/middleware"
 	"github.com/rulanugrh/order/internal/repository"
 	"github.com/rulanugrh/order/internal/util"
 	"github.com/rulanugrh/order/pkg"
@@ -22,8 +23,13 @@ func OrderService(repository repository.OrderInterface, product repository.Produ
 }
 
 func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*order.ResponseProccess, error) {
+	token, err := middleware.ReadToken()
+	if err != nil {
+		return util.UnauthorizedCreateOrder(err.Error()), err
+	}
+
 	input := entity.Order{
-		UserID: uint(req.Req.GetUserId()),
+		UserID: token.ID,
 		ProductID: uint(req.Req.GetProductId()),
 		Quantity: uint(req.Req.GetQuantity()),
 		MethodPayment: req.Req.GetMethodPayment(),
@@ -55,6 +61,11 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 }
 
 func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*order.ResponseCheckout, error) {
+	token, err := middleware.ReadToken()
+	if err != nil {
+		return util.UnauthorizedCheckout(err.Error()), err
+	}
+
 	data, err := o.repository.Checkout(req.Uuid)
 	if err != nil {
 		return util.BadRequestOrderCheckout(err.Error()), err
@@ -65,7 +76,7 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 		return util.BadRequestOrderCheckout(err_product.Error()), err
 	}
 
-	payment, err_payment := o.xendit.PaymentRequest(*data)
+	payment, err_payment := o.xendit.PaymentRequest(*data, token.Username)
 	if err_payment != nil {
 		return util.BadRequestOrderCheckout(err_payment.Error()), err
 	}

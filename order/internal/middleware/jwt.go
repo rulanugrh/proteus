@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func GetID() (*uint, error) {
+func ReadToken() (*jwtclaim, error) {
 	meta, ok := metadata.FromIncomingContext(context.Background())
 
 	if !ok {
@@ -26,7 +26,7 @@ func GetID() (*uint, error) {
 		return nil, constant.Unauthorized(err.Error())
 	}
 
-	return &claim.ID, nil
+	return claim, nil
 }
 
 func getToken(token string) (*jwtclaim, error) {

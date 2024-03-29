@@ -58,6 +58,30 @@ services:
     depends_on:
       - db-product
   
+  prometheus:
+    image: prom/prometheus:v2.40.4
+    container_name: prome-tokoku
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    volumes:
+      - ./provisioning/observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - tokoku
+  
+  grafana:
+    image: grafana/grafana:9.3.0
+    container_name: grafana-tokoku
+    ports:
+      - ${GRAFANA_PORT}:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - ./provisioning/observability/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - grafana:/var/lib/grafana
+    networks:
+      - tokoku
+
   app-order:
     build:
       context: ./order/
@@ -105,6 +129,9 @@ services:
     networks:
       - tokoku
 
+volumes:
+  grafana:
+  
 networks:
   tokoku:
     driver: bridge

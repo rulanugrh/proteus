@@ -1,0 +1,13 @@
+---
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+alerting:
+
+rule_files:
+
+scrape_configs:
+- job_name: tokoku
+  static_configs:
+  - target: ["app-product:5000"]

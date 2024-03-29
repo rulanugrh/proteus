@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
 	"github.com/rulanugrh/tokoku/product/internal/entity/web"
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
@@ -23,10 +25,11 @@ type ProductInterface interface {
 type product struct {
 	service service.ProductInterface
 	rabbitmq pkg.RabbitMQInterface
+	metric *pkg.Metric
 }
 
-func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface) ProductInterface {
-	return &product{service: service, rabbitmq: rabbitmq}
+func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metric) ProductInterface {
+	return &product{service: service, rabbitmq: rabbitmq, metric: metric}
 }
 
 func(p *product) Create(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +39,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 
 	claim, err := middleware.CheckToken(token)
 	if err != nil {
+		p.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
+		
 		w.WriteHeader(401)
 		return
 	}
@@ -47,6 +52,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "403", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(403)
 		w.Write(response)
@@ -60,6 +66,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(500)
 		w.Write(response)
@@ -73,6 +80,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
 		w.Write(response)
@@ -89,6 +97,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
+
 		w.WriteHeader(400)
 		w.Write(response)
 		return
@@ -100,7 +110,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
+	p.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
+	p.metric.Counter.With(prometheus.Labels{"type": "create", "service": "product"}).Inc()
 	w.WriteHeader(201)
 	w.Write(response)
 	return
@@ -121,6 +132,8 @@ func(p *product) FindID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
+
 		w.WriteHeader(400)
 		w.Write(response)
 		return
@@ -132,6 +145,7 @@ func(p *product) FindID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
@@ -145,6 +159,7 @@ func(p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
 		w.Write(response)
@@ -157,6 +172,7 @@ func(p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
@@ -179,6 +195,7 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "403", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(403)
 		w.Write(response)
@@ -192,11 +209,13 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(500)
 		w.Write(response)
 		return
 	}
+
 	data, err := p.service.Update(uint(id), req)
 	if err != nil {
 		response, err := json.Marshal(web.BadRequest(err.Error()))
@@ -204,6 +223,7 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
 		w.Write(response)
@@ -216,6 +236,8 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
+	p.metric.Counter.With(prometheus.Labels{"type": "update", "service": "product"}).Inc()
 	w.WriteHeader(200)
 	w.Write(response)
 	return

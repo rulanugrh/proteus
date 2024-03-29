@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
 	"github.com/rulanugrh/tokoku/product/internal/entity/web"
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
 	"github.com/rulanugrh/tokoku/product/internal/service"
+	"github.com/rulanugrh/tokoku/product/pkg"
 )
 
 type CommentInterface interface {
@@ -20,10 +23,11 @@ type CommentInterface interface {
 
 type comment struct {
 	service service.CommentInterface
+	metric *pkg.Metric
 }
 
-func CommentHandler(service service.CommentInterface) CommentInterface {
-	return &comment{service: service}
+func CommentHandler(service service.CommentInterface, metric *pkg.Metric) CommentInterface {
+	return &comment{service: service, metric: metric}
 }
 
 func(c *comment) Create(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +40,8 @@ func(c *comment) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		c.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "create", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(401)
 		w.Write(response)
@@ -61,6 +67,8 @@ func(c *comment) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
+
 		w.WriteHeader(400)
 		w.Write(response)
 		return
@@ -72,6 +80,8 @@ func(c *comment) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
+	c.metric.Counter.With(prometheus.Labels{"type": "create", "service": "category"}).Inc()
 	w.WriteHeader(201)
 	w.Write(response)
 	return
@@ -87,6 +97,8 @@ func(c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		c.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "GET", "type": "findUID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
+
 		w.WriteHeader(401)
 		w.Write(response)
 		return
@@ -100,6 +112,7 @@ func(c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findUID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 		w.WriteHeader(400)
 		w.Write(response)
 		return
@@ -111,6 +124,7 @@ func(c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findUID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
@@ -130,6 +144,7 @@ func(c *comment) FindPID(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+		c.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "GET", "type": "findPID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
 		w.Write(response)
@@ -141,6 +156,8 @@ func(c *comment) FindPID(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
+
+	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findPID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 
 	w.WriteHeader(200)
 	w.Write(response)

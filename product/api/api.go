@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rulanugrh/tokoku/product/api/handler"
 	"github.com/rulanugrh/tokoku/product/internal/config"
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
@@ -51,6 +54,10 @@ func main() {
 	rabbit := config.InitRabbit(conf)
 	rabbit.InitRabbit()
 
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(collectors.NewGoCollector())
+	metric := pkg.NewPrometheus(reg)
+
 	productRepo := repository.ProductRepository(db)
 	commentRepo := repository.CommentRepository(db)
 	categoryRepo := repository.CategoryRepository(db)
@@ -60,17 +67,19 @@ func main() {
 	categoryService := service.CategoryService(categoryRepo)
 
 	rabbitInterface := pkg.RabbitMQ(*rabbit)
+	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg})
 
 	api := API{
-		product: handler.ProductHandler(productService, rabbitInterface),
-		comment: handler.CommentHandler(commentService),
-		category: handler.CategoryHandler(categoryService),
+		product: handler.ProductHandler(productService, rabbitInterface, metric),
+		comment: handler.CommentHandler(commentService, metric),
+		category: handler.CategoryHandler(categoryService, metric),
 	}
 
 	route := mux.NewRouter()
 	// middleware impelment
 	route.Use(middleware.CORS)
 	route.Use(middleware.ValidateToken)
+	route.Handle("/metric", promHandler).Methods("GET")
 
 	// routes app 
 	api.ProductRoute(route)

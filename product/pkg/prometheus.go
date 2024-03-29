@@ -29,13 +29,13 @@ func NewPrometheus(reg prometheus.Registerer) *Metric {
 			Namespace: "product",
 			Name:      "counter_product",
 			Help:      "Counter product on all services",
-		}, []string{"type"}),
+		}, []string{"type", "service"}),
 		Histogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: "product",
 			Name:      "histogram_product",
 			Help:      "Histogram product on all services",
 			Buckets:   []float64{0.1, 0.15, 0.2, 0.25, 0.3},
-		}, []string{"code", "method", "type"}),
+		}, []string{"code", "method", "type", "service"}),
 	}
 
 	reg.MustRegister(metric.TotalCPU, metric.Histogram, metric.TotalMemory, metric.Counter)

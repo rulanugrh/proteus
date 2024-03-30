@@ -10,6 +10,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/xendit/xendit-go/v4"
 
+	"github.com/rulanugrh/order/api/handler"
 	"github.com/rulanugrh/order/internal/config"
 	"github.com/rulanugrh/order/internal/grpc/cart"
 	"github.com/rulanugrh/order/internal/grpc/order"
@@ -38,8 +39,8 @@ func grpcServer(crt *service.CartServiceServer, ord *service.OrderServiceServer,
 	return serve.Serve(nets)
 }
 
-func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer, conf *config.App) error {
-	mux := runtime.NewServeMux()
+func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer, conf *config.App, webhook handler.WebhookInterface) error {
+	mux := runtime.NewServeMux()	
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -58,9 +59,9 @@ func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer,
 
 	serv := http.Server{
 		Addr: dsnHTTP,
-		Handler: mux,
 	}
-	
+	http.HandleFunc("/payment_success", webhook.PaymentSuccess)
+
 	return serv.ListenAndServe()
 }
 
@@ -82,6 +83,9 @@ func InitServer() {
 	// Config for rabbitMQ and Run Consume
 	rabbitmq := config.InitializeRabbit(conf)
 	rabbitmq.InitRabbit()
+
+	// webhook configuration
+	webhhok := handler.NewWebhookHandler()
 
 	productRepository := repository.ProductRepository(mongo, conf)
 	orderRepository := repository.OrderRepository(postgres)
@@ -115,7 +119,7 @@ func InitServer() {
 		log.Println("[*] Error Running GRPC: ", err_grpc)
 	}
 
-	err_http := restServer(cartService, orderService, conf)
+	err_http := restServer(cartService, orderService, conf, webhhok)
 	if err_http != nil {
 		log.Println("[*] Error Running HTTP: ", err_http)
 

@@ -22,7 +22,8 @@
     "express-winston": "^4.2.0",
     "jsonwebtoken": "^9.0.2",
     "prom-client": "^15.1.1",
-    "winston": "^3.12.0"
+    "winston": "^3.12.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

@@ -20,7 +20,7 @@ type CartServiceServer struct {
 	cart.UnimplementedCartServiceServer
 	repository repository.CartInterface
 	product    repository.ProductInterface
-	metric *pkg.Metrict
+	metric     *pkg.Metrict
 }
 
 func CartService(repository repository.CartInterface, product repository.ProductInterface, metric *pkg.Metrict) *CartServiceServer {

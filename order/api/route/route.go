@@ -89,7 +89,7 @@ func InitServer() {
 	metric.SetTotalMemory()
 
 	// Running Services and Listener GRPC
-	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq)
+	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq, metric)
 	cartService := service.CartService(cartRepository, productRepository, metric)
 
 	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPC)

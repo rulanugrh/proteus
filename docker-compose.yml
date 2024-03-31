@@ -78,7 +78,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     volumes:
       - ./provisioning/observability/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - grafana:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana
     networks:
       - tokoku
 
@@ -115,6 +115,20 @@ services:
       - tokoku
     depends_on:
       - db-user
+
+  app-webhook:
+    build: 
+      context: ./webhook/
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PORT=${APP_WEBHOOK_PORT}
+    env_file:
+      - ./webhook/.env
+    restart: unless-stopped
+    ports:
+      - ${APP_WEBHOOK_PORT}:3000
+    networks:
+      - tokoku
   
   rabbitmq:
     image: rabbitmq:3.13.0-management-alpine
@@ -128,10 +142,21 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
     networks:
       - tokoku
-
-volumes:
-  grafana:
   
+  nginx:
+    image: nginx
+    container_name: nginx-gateway
+    hostname: gateway
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - ./provisioning/gateway/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/log/nginx.log:/var/log/nginx-error.log
+    networks:
+      - tokoku
+      
 networks:
   tokoku:
     driver: bridge

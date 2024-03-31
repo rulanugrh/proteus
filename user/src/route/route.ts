@@ -8,4 +8,3 @@ export const router: Router = express.Router()
 router.post("/register", validate(schemaRegiter), registerUser)
 router.post("/login", validate(schemaLogin), loginUser)
 router.get("/get/:id", verify, findID)
-

@@ -17,17 +17,20 @@ type RabbitMQInterface interface {
 	Publisher(name string, data []byte, exchange string, exchangeType string, username string) error
 	UpdateProduct() error
 	CatchProduct() error
+	NotifierPayment() error
 }
 
 type rabbit struct {
 	client *config.RabbitMQ
 	db     repository.ProductInterface
+	order repository.OrderInterface
 }
 
-func RabbitMQ(client *config.RabbitMQ, db repository.ProductInterface) RabbitMQInterface {
+func RabbitMQ(client *config.RabbitMQ, db repository.ProductInterface, order repository.OrderInterface) RabbitMQInterface {
 	return &rabbit{
 		client: client,
 		db:     db,
+		order: order,
 	}
 }
 
@@ -141,8 +144,8 @@ func (r *rabbit) UpdateProduct() error {
 }
 
 func (r *rabbit) NotifierPayment() error {
-	log.Println("[*] Declaring Queue for Update Product")
-	queue, err_queue := r.client.Channel.QueueDeclare("product-update", true, false, false, false, nil)
+	log.Println("[*] Declaring Queue for Notif Webhook")
+	queue, err_queue := r.client.Channel.QueueDeclare("notif-webhook", true, false, false, false, nil)
 	if err_queue != nil {
 		return constant.InternalServerError("error, cannot declare queue", err_queue)
 	}
@@ -157,17 +160,21 @@ func (r *rabbit) NotifierPayment() error {
 	go func() {
 		for msg := range message {
 			log.Println("[*] Receiving Message")
-			var payload entity.Product
+			var payload entity.ResponseXendit
 			err := json.Unmarshal(msg.Body, &payload)
 			if err != nil {
 				log.Printf("error marshaling response: %s", err.Error())
 			}
 
-			err_update := r.db.Update(payload.ID, payload)
-			if err_update != nil {
-				log.Printf("error create, because: %s", err_update.Error())
+			if payload.Message == "payment success" {
+				r.order.Update(payload.Data.Data.ReferenceID, "success")
+			} else if payload.Message == "await payment capture" {
+				r.order.Update(payload.Data.Data.ReferenceID, "waiting")
+			} else if payload.Message == "payment pending" {
+				r.order.Update(payload.Data.Data.ReferenceID, "pending")
+			} else {
+				r.order.Update(payload.Data.Data.ReferenceID, "failed")
 			}
-
 		}
 	}()
 

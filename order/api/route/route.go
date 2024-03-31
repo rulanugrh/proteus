@@ -88,7 +88,7 @@ func InitServer() {
 	cartRepository := repository.CartRepository(postgres)
 	
 	// Confsume for Product Catch and Update
-	rabbimq := pkg.RabbitMQ(rabbitmq, productRepository)
+	rabbimq := pkg.RabbitMQ(rabbitmq, productRepository, orderRepository)
 	err_catch := rabbimq.CatchProduct()
 	if err_catch != nil {
 		log.Println("[*] Error consume catch product: ", err_catch)
@@ -98,6 +98,11 @@ func InitServer() {
 	if err_update != nil {
 		log.Println("[*] Error consume update product: ", err_update)
 
+	}
+
+	err_notified := rabbimq.NotifierPayment()
+	if err_notified != nil {
+		log.Println("[*] Error consume notifier webhook: ", err_notified)
 	}
 
 	// Running Services and Listener GRPC and REST

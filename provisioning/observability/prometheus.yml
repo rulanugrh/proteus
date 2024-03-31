@@ -12,3 +12,4 @@ scrape_configs:
   static_configs:
   - target: ["app-product:5000"]
   - target: ["app-order:6000"]
+  - target: ["app-user:4000"]

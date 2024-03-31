@@ -22,6 +22,9 @@ $ cp user/.env.example user/.env
 
 # order service
 $ cp order/.env.example order/.env
+
+# webhook payment
+$ cp webhook/.env.example webhook/.env
 ```
 
 Next, you can run the program with `build.sh` file

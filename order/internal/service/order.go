@@ -104,7 +104,6 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 		OrderID:                data.ID,
 		OrderUUID:              data.UUID,
 		MethodPayment:          data.MethodPayment,
-		Status:                 string(payment.Status),
 		PaymentCreated:         payment.Created,
 		PaymentUpdated:         payment.Updated,
 		PaymentRequestCurrency: payment.Currency.String(),

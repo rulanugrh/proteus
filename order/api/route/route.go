@@ -1,13 +1,14 @@
 package route
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/xendit/xendit-go/v4"
 
 	"github.com/rulanugrh/order/internal/config"
@@ -36,32 +37,6 @@ func grpcServer(crt *service.CartServiceServer, ord *service.OrderServiceServer,
 
 	log.Printf("[*] Start GRPC Server at %s", nets.Addr().String())
 	return serve.Serve(nets)
-}
-
-func restServer(crt *service.CartServiceServer, ord *service.OrderServiceServer, conf *config.App) error {
-	mux := runtime.NewServeMux()	
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	err := cart.RegisterCartServiceHandlerServer(ctx, mux, crt)
-	if err != nil {
-		return err
-	}
-
-	err = order.RegisterOrderServiceHandlerServer(ctx, mux, ord)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("[*] Start HTTP Server at %s:%s", conf.Server.Host, conf.Server.HTTP)
-	dsnHTTP := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.HTTP)
-
-	serv := http.Server{
-		Addr: dsnHTTP,
-		Handler: mux,
-	}
-
-	return serv.ListenAndServe()
 }
 
 func InitServer() {
@@ -105,9 +80,17 @@ func InitServer() {
 		log.Println("[*] Error consume notifier webhook: ", err_notified)
 	}
 
-	// Running Services and Listener GRPC and REST
+
+	// prometheus initalize
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(collectors.NewGoCollector())
+	metric := pkg.NewPrometheus(registry)
+	metric.SetTotalCPU()
+	metric.SetTotalMemory()
+
+	// Running Services and Listener GRPC
 	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq)
-	cartService := service.CartService(cartRepository, productRepository)
+	cartService := service.CartService(cartRepository, productRepository, metric)
 
 	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPC)
 	listener, err := net.Listen("tcp", dsnGRPC)
@@ -120,9 +103,21 @@ func InitServer() {
 		log.Println("[*] Error Running GRPC: ", err_grpc)
 	}
 
-	err_http := restServer(cartService, orderService, conf)
+	// Running HTTP Service for Metric
+	server := http.NewServeMux()
+	promHandler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry})
+	server.Handle("/metric", promHandler)
+	
+	dsnHTTP := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.HTTP)
+
+	serv := http.Server{
+		Addr: dsnHTTP,
+		Handler: server,
+	}
+
+	err_http := serv.ListenAndServe()
 	if err_http != nil {
 		log.Println("[*] Error Running HTTP: ", err_http)
-
 	}
+
 }

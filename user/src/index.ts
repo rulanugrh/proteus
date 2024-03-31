@@ -2,17 +2,32 @@ import { PrismaClient } from "@prisma/client";
 import express, { Request, Response } from 'express'
 import 'dotenv/config'
 import { router } from "./route/route";
+import { register, totalCPU, totalMemory } from "./helper/prometheus";
 
 export const prisma = new PrismaClient();
-
 
 const app = express()
 const port = process.env.APP_PORT
 
+// setup for cpu usage server
+const cpuUsage = process.cpuUsage()
+const currentUsage = (cpuUsage.user + cpuUsage.system) * 1000
+
+// get total memory usage on server
+const mem = process.memoryUsage()
+
 async function main() {
+    totalCPU.labels('v1').set(currentUsage)
+    totalMemory.labels('v1').set(mem.heapUsed)
+
     app.use(express.json())
 
     app.use("/api/user", router)
+
+    app.get('/metrics', async (req: Request, res: Response) => {
+        res.setHeader('Content-Type', register.contentType)
+        res.send(await register.metrics())
+    })
 
     app.all("*", (req: Request, res: Response) => {
         res.status(404).json({ error: `Route ${req.originalUrl} not found` });

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from 'bcrypt';
 import { prisma } from "..";
 import { Payload, generateToken } from "../middleware/jwt";
+import { counter, histogram } from "../helper/prometheus";
 
 export class Result {
     fname: string
@@ -12,10 +13,12 @@ export class Result {
 }
 
 export const registerUser = async (req: Request, res: Response) => {
+    const start = Date.now()
     try {
         const { fname, lname, username, email, avatar, roleID, password } = req.body
         const hashPassword = bcrypt.hash(password, 14)
-
+        
+        const responseTime = Date.now() - start
         const find = await prisma.user.findUnique({
             where: {
                 email: email
@@ -23,6 +26,7 @@ export const registerUser = async (req: Request, res: Response) => {
         })
 
         if (find) {
+            histogram.labels(req.method, '400', 'register').observe(responseTime)
             res.status(400).json({ msg: 'sorry your email have been created', code: 400 })
         }
 
@@ -45,6 +49,8 @@ export const registerUser = async (req: Request, res: Response) => {
         result.roleID = roleID
         result.username = username
 
+        histogram.labels(req.method, '200', 'register').observe(responseTime)
+        counter.labels('register').inc()
         res.status(200).json({
             msg: 'success create account',
             code: 200,
@@ -52,6 +58,8 @@ export const registerUser = async (req: Request, res: Response) => {
         })
 
     } catch (error) {
+        const responseTime = Date.now() - start
+        histogram.labels(req.method, '500', 'register').observe(responseTime)
         res.status(500).json({
             msg: 'something error',
             err: error,
@@ -60,7 +68,9 @@ export const registerUser = async (req: Request, res: Response) => {
 }
 
 export const loginUser = async (req: Request, res: Response) => {
+    const start = Date.now()
     try {
+        const responseTime = Date.now() - start
         const { email, password } = req.body
         const find = await prisma.user.findUnique({
             where: {
@@ -69,11 +79,13 @@ export const loginUser = async (req: Request, res: Response) => {
         })
 
         if (!find) {
+            histogram.labels(req.method, '404', 'login').observe(responseTime)
             res.status(404).json({ msg: 'sorry your email not found', code: 404 })
         }
 
         const verify = bcrypt.compare(password, find[0].password)
         if (!verify) {
+            histogram.labels(req.method, '400', 'login').observe(responseTime)
             res.status(400).json({
                 msg: 'sorry your password not matched',
                 code: 400
@@ -93,8 +105,13 @@ export const loginUser = async (req: Request, res: Response) => {
             maxAge: 24 * 60 * 60 * 1000
         })
 
+        histogram.labels(req.method, '200', 'login').observe(responseTime)
+        counter.labels('login').inc()
         res.status(200).json({ msg: 'success login' })
     } catch (error) {
+        const responseTime = Date.now() - start
+        histogram.labels(req.method, '404', 'login').observe(responseTime)
+
         res.status(500).json({
             msg: 'something error',
             err: error,
@@ -103,7 +120,9 @@ export const loginUser = async (req: Request, res: Response) => {
 }
 
 export const findID = async (req: Request, res: Response) => {
+    const start = Date.now()
     try {
+        const responseTime = Date.now() - start
         const { id } = req.params
         const result = await prisma.user.findUnique({
             where: {
@@ -112,6 +131,7 @@ export const findID = async (req: Request, res: Response) => {
         })
         
         if (!result) {
+            histogram.labels(req.method, '404', 'findID').observe(responseTime)
             res.status(404).json({
                 msg: 'user not found'
             })
@@ -125,6 +145,7 @@ export const findID = async (req: Request, res: Response) => {
         response.username = result[0].username
 
 
+        histogram.labels(req.method, '200', 'findID').observe(responseTime)
         res.status(200).json({
             msg: 'user found',
             code: 200,

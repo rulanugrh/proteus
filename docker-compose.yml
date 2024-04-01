@@ -58,6 +58,8 @@ services:
         - EXPOSE_PORT=${APP_PRODUCT_PORT}
     env_file:
       - ./product/.env
+    volumes:
+      - ./data/log/product.log:/data/log/product.log
     restart: unless-stopped
     ports:
       - ${APP_PRODUCT_PORT}:3000
@@ -145,6 +147,8 @@ services:
         - EXPOSE_PORT=${APP_USER_PORT}
     env_file:
       - ./user/.env
+    volumes:
+      - ./data/log/product.log:/data/log/product.log
     restart: unless-stopped
     ports:
       - ${APP_USER_PORT}:3000

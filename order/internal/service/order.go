@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,15 +23,17 @@ type OrderServiceServer struct {
 	xendit     pkg.XenditInterface
 	rabbitmq   pkg.RabbitMQInterface
 	metric     *pkg.Metrict
+	log pkg.ILogrus
 }
 
-func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metrict) *OrderServiceServer {
-	return &OrderServiceServer{repository: repository, product: product, xendit: xendit, rabbitmq: rabbitmq, metric: metric}
+func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metrict, log pkg.ILogrus) *OrderServiceServer {
+	return &OrderServiceServer{repository: repository, product: product, xendit: xendit, rabbitmq: rabbitmq, metric: metric, log: log}
 }
 
 func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*order.ResponseProccess, error) {
 	token, err := middleware.ReadToken()
 	if err != nil {
+		o.log.Record("/order.OrderService/Receipt", "POST", 401).Error("not have token jwt")
 		o.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 		return util.UnauthorizedCreateOrder(err.Error()), err
 	}
@@ -48,14 +51,16 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 
 	data, find := o.product.FindID(uint(req.Req.ProductId))
 	if find != nil {
-		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
+		o.log.Record("/order.OrderService/Receipt", "POST", 404).Error("product not found with this id "+strconv.Itoa(int(req.Req.ProductId)))
+		o.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.NotFoundOrderCreate(find.Error()), find
 	}
 
 	result, err := o.repository.Create(input)
 	if err != nil {
-		o.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
+		o.log.Record("/order.OrderService/Receipt", "POST", 400).Error("bad request while create receipt")
+		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestOrderCreate(err.Error()), err
 	}
@@ -73,11 +78,14 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 
 	err_publisher := o.rabbitmq.Publisher("order-create", marshalling, "order", "topic", token.Username)
 	if err_publisher != nil {
+		o.log.Record("/order.OrderService/Receipt", "POST", 500).Error("error while push to rabbitmq")
+
 		o.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.InternalServerErrorOrderCreate(err_publisher.Error()), err_publisher
 	}
 
+	o.log.Record("/order.OrderService/Receipt", "POST", 200).Info("success create receipt")
 	o.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "POST", "type": "create", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 	o.metric.Counter.With(prometheus.Labels{"type": "create", "service": "order"}).Inc()
 	return util.SuccessOrderCreate("success create order", &response), nil
@@ -86,12 +94,14 @@ func (o *OrderServiceServer) Receipt(ctx context.Context, req *order.Request) (*
 func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*order.ResponseCheckout, error) {
 	token, err := middleware.ReadToken()
 	if err != nil {
+		o.log.Record("/order.OrderService/Checkout", "POST", 401).Error("not have token jwt")
 		o.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 		return util.UnauthorizedCheckout(err.Error()), err
 	}
 
 	data, err := o.repository.Checkout(req.Uuid)
 	if err != nil {
+		o.log.Record("/order.OrderService/Checkout", "POST", 400).Error("bad request to checkout with this uuid")
 		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestOrderCheckout(err.Error()), err
@@ -99,13 +109,16 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 
 	product, err_product := o.product.FindID(data.ProductID)
 	if err_product != nil {
-		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
+		o.log.Record("/order.OrderService/Checkout", "POST", 404).Error("product not found with this id")
+		o.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestOrderCheckout(err_product.Error()), err_product
 	}
 
 	payment, err_payment := o.xendit.PaymentRequest(*data, token.Username, product.Name, product.Description, float64(product.Price))
 	if err_payment != nil {
+		o.log.Record("/order.OrderService/Checkout", "POST", 400).Error("bad request while create payment to xendit")
+
 		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "payment", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestOrderCheckout(err_payment.Error()), err_payment
@@ -133,6 +146,7 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 
 	err_save := o.repository.SaveTransaction(transaction)
 	if err_save != nil {
+		o.log.Record("/order.OrderService/Checkout", "POST", 500).Error("error saving into db transaction")
 		o.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "POST", "type": "payment", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		log.Println("[*] Error saving record transaction into DB: ", err_save)
@@ -142,11 +156,14 @@ func (o *OrderServiceServer) Checkout(ctx context.Context, req *order.UUID) (*or
 
 	err_publisher := o.rabbitmq.Publisher("order-checkout", marshalling, "order", "topic", token.Username)
 	if err_publisher != nil {
+		o.log.Record("/order.OrderService/Checkout", "POST", 400).Error("bad request while publisher to rabbitmq")
+
 		o.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestOrderCheckout(err_publisher.Error()), err_publisher
 	}
 
+	o.log.Record("/order.OrderService/Checkout", "POST", 200).Info("success checkout payment")
 	o.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "POST", "type": "checkout", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 	o.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "POST", "type": "payment", "service": "order"}).Observe(time.Since(time.Now()).Seconds())
 	o.metric.Counter.With(prometheus.Labels{"type": "checkout", "service": "order"}).Inc()

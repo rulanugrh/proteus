@@ -58,6 +58,9 @@ func InitServer() {
 	rabbitmq := config.InitializeRabbit(conf)
 	rabbitmq.InitRabbit()
 
+	// Logger initialize
+	logger := pkg.Logrus()
+
 	productRepository := repository.ProductRepository(mongo, conf)
 	orderRepository := repository.OrderRepository(postgres)
 	cartRepository := repository.CartRepository(postgres)
@@ -89,8 +92,8 @@ func InitServer() {
 	metric.SetTotalMemory()
 
 	// Running Services and Listener GRPC
-	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq, metric)
-	cartService := service.CartService(cartRepository, productRepository, metric)
+	orderService := service.OrderService(orderRepository, productRepository, xendit, rabbimq, metric, logger)
+	cartService := service.CartService(cartRepository, productRepository, metric, logger)
 
 	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPC)
 	listener, err := net.Listen("tcp", dsnGRPC)

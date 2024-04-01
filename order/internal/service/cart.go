@@ -21,21 +21,24 @@ type CartServiceServer struct {
 	repository repository.CartInterface
 	product    repository.ProductInterface
 	metric     *pkg.Metrict
+	log pkg.ILogrus
 }
 
-func CartService(repository repository.CartInterface, product repository.ProductInterface, metric *pkg.Metrict) *CartServiceServer {
-	return &CartServiceServer{repository: repository, product: product, metric: metric}
+func CartService(repository repository.CartInterface, product repository.ProductInterface, metric *pkg.Metrict, log pkg.ILogrus) *CartServiceServer {
+	return &CartServiceServer{repository: repository, product: product, metric: metric, log: log}
 }
 
 func (c *CartServiceServer) AddToCart(ctx context.Context, req *cart.Request) (*cart.Response, error) {
 	_, err := c.product.FindID(uint(req.Req.ProductId))
 	if err != nil {
+		c.log.Record("/cart.CartService/AddToCart", "POST", 404).Error("product with this id not found")
 		c.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "add", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 		return util.NotFoundCart(err.Error()), err
 	}
 
 	token, err_token := middleware.ReadToken()
 	if err_token != nil {
+		c.log.Record("/cart.CartService/AddToCart", "POST", 401).Error("not have token jwt")
 		c.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "add", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 		return util.UnauthorizedCart(err_token.Error()), err
 	}
@@ -48,10 +51,12 @@ func (c *CartServiceServer) AddToCart(ctx context.Context, req *cart.Request) (*
 
 	err_create := c.repository.AddToCart(input)
 	if err_create != nil {
-		c.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "add", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
+		c.log.Record("/cart.CartService/AddToCart", "POST", 400).Error("bad request while add to cart")
+		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "add", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 		return util.BadRequestCart(err_create.Error()), err_create
 	}
 
+	c.log.Record("/cart.CartService/AddToCart", "POST", 400).Info("success add to cart")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "POST", "type": "add", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 	c.metric.Counter.With(prometheus.Labels{"type": "add", "service": "cart"}).Inc()
 	return util.SuccessCart("success add to cart"), nil
@@ -60,6 +65,7 @@ func (c *CartServiceServer) AddToCart(ctx context.Context, req *cart.Request) (*
 func (c *CartServiceServer) DeleteCart(ctx context.Context, req *cart.ID) (*cart.Response, error) {
 	id, err := strconv.Atoi(req.Id)
 	if err != nil {
+		c.log.Record("/cart.CartService/DeleteCart", "DELETE", 500).Error("error converting request ID")
 		c.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "DELETE", "type": "delete", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.InternalServerErrorCart(err.Error()), err
@@ -67,11 +73,13 @@ func (c *CartServiceServer) DeleteCart(ctx context.Context, req *cart.ID) (*cart
 
 	err_delete := c.repository.Delete(uint(id))
 	if err_delete != nil {
+		c.log.Record("/cart.CartService/DeleteCart", "DELETE", 400).Error("bad request while delete cart")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "DELETE", "type": "delete", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestCart(err_delete.Error()), err_delete
 	}
 
+	c.log.Record("/cart.CartService/DeleteCart", "DELETE", 200).Info("success deleted cart")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "DELETE", "type": "delete", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 	return util.DeletedCart("success delete cart by this id"), nil
@@ -80,6 +88,7 @@ func (c *CartServiceServer) DeleteCart(ctx context.Context, req *cart.ID) (*cart
 func (c *CartServiceServer) ListCart(empty *emptypb.Empty, stream cart.CartService_ListCartServer) error {
 	token, err := middleware.ReadToken()
 	if err != nil {
+		c.log.Record("/cart.CartService/ListCart", "GET", 401).Error("not have token")
 		c.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "GET", "type": "getAll", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return constant.Unauthorized(err.Error())
@@ -87,6 +96,7 @@ func (c *CartServiceServer) ListCart(empty *emptypb.Empty, stream cart.CartServi
 
 	data, err_list := c.repository.ListCart(token.ID)
 	if err_list != nil {
+		c.log.Record("/cart.CartService/ListCart", "GET", 400).Error("bad request while get all cart")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "getAll", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return constant.BadRequest(err_list.Error(), err_list)
@@ -106,6 +116,7 @@ func (c *CartServiceServer) ListCart(empty *emptypb.Empty, stream cart.CartServi
 		})
 	}
 
+	c.log.Record("/cart.CartService/ListCart", "GET", 200).Info("success get all cart")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "getAll", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 	return constant.Success("success get all product by this user id")
@@ -122,6 +133,7 @@ func (c *CartServiceServer) Proccesses(ctx context.Context, req *cart.RequestPro
 
 	data, err := c.repository.ProcessCart(uint(req.Id), input)
 	if err != nil {
+		c.log.Record("/cart.CartService/Proccesses", "POST", 400).Error("Bad request while process this cart id")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "proccess", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.FailureCreatedCart(err.Error()), err
@@ -129,6 +141,8 @@ func (c *CartServiceServer) Proccesses(ctx context.Context, req *cart.RequestPro
 
 	product, err_find := c.product.FindID(data.ProductID)
 	if err_find != nil {
+		c.log.Record("/cart.CartService/Proccesses", "POST", 404).Error("product not found")
+
 		c.metric.Histogram.With(prometheus.Labels{"code": "404", "method": "POST", "type": "proccess", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.NotFoundCartCreated(err_find.Error()), err_find
@@ -142,6 +156,7 @@ func (c *CartServiceServer) Proccesses(ctx context.Context, req *cart.RequestPro
 		Total:       int64(product.Price * uint32(data.Quantity)),
 	}
 
+	c.log.Record("/cart.CartService/Proccesses", "POST", 200).Info("success proccess cart to order")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "POST", "type": "proccess", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 	c.metric.Counter.With(prometheus.Labels{"type": "process", "service": "cart"}).Inc()
 	return util.SuccessCreatedCart("success created for order", &response), nil
@@ -154,11 +169,13 @@ func (c *CartServiceServer) Update(ctx context.Context, req *cart.RequestUpdate)
 
 	err := c.repository.Update(uint(req.Id), request)
 	if err != nil {
+		c.log.Record("/cart.CartService/Update", "PUT", 400).Error("bad request while update cart with this id")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "PUT", "type": "update", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 
 		return util.BadRequestCart(err.Error()), err
 	}
 
+	c.log.Record("/cart.CartService/Update", "PUT", 200).Info("success update cart with this id")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "PUT", "type": "update", "service": "cart"}).Observe(time.Since(time.Now()).Seconds())
 	c.metric.Counter.With(prometheus.Labels{"type": "update", "service": "cart"}).Inc()
 	return util.SuccessCart("success update cart"), nil

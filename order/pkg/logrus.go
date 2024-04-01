@@ -10,7 +10,7 @@ import (
 )
 
 type ILogrus interface {
-	Record(endpoint string, method string, code int) *logrus.Entry
+	RecordGRPC(endpoint string, method string, code int) *logrus.Entry
 }
 
 type Logger struct {
@@ -44,8 +44,9 @@ func Logrus() *Logger {
 	return &Logger{logger}
 }
 
-func (l *Logger) Record(endpoint string, method string, code int) *logrus.Entry {
+func (l *Logger) RecordGRPC(endpoint string, method string, code int) *logrus.Entry {
 	return l.WithFields(logrus.Fields{
+		"type": "gprc",
 		"endpoint": endpoint,
 		"method": method,
 		"code": code,

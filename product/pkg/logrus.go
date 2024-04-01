@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +18,9 @@ type Logger struct {
 }
 
 func Logrus() *Logger {
-	file, _ := os.Create("../../data/log/product.log")
+	name := "../data/log/product.log"
+	os.MkdirAll(filepath.Dir(name), 0770)
+	file, _ := os.Create(name)
 	defer file.Close()
 
 	logger := logrus.New()

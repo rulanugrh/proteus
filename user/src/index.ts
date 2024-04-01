@@ -3,7 +3,9 @@ import express, { Request, Response } from 'express'
 import 'dotenv/config'
 import { router } from "./route/route";
 import { register, totalCPU, totalMemory } from "./helper/prometheus";
+import { Logger } from "tslog";
 
+export const logger = new Logger({ name: 'user-services '});
 export const prisma = new PrismaClient();
 
 const app = express()

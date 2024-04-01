@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import bcrypt from 'bcrypt';
-import { prisma } from "..";
+import { logger, prisma } from "..";
 import { Payload, generateToken } from "../middleware/jwt";
 import { counter, histogram } from "../helper/prometheus";
 
@@ -26,6 +26,7 @@ export const registerUser = async (req: Request, res: Response) => {
         })
 
         if (find) {
+            logger.error("[register] - sorry your email have been created")
             histogram.labels(req.method, '400', 'register').observe(responseTime)
             res.status(400).json({ msg: 'sorry your email have been created', code: 400 })
         }
@@ -49,6 +50,7 @@ export const registerUser = async (req: Request, res: Response) => {
         result.roleID = roleID
         result.username = username
 
+        logger.info("[register] - success regiter account")
         histogram.labels(req.method, '200', 'register').observe(responseTime)
         counter.labels('register').inc()
         res.status(200).json({
@@ -59,6 +61,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
     } catch (error) {
         const responseTime = Date.now() - start
+        logger.fatal("[register] - endpoint user register error")
         histogram.labels(req.method, '500', 'register').observe(responseTime)
         res.status(500).json({
             msg: 'something error',
@@ -79,12 +82,14 @@ export const loginUser = async (req: Request, res: Response) => {
         })
 
         if (!find) {
+            logger.error("[login] - sorry your email not found")
             histogram.labels(req.method, '404', 'login').observe(responseTime)
             res.status(404).json({ msg: 'sorry your email not found', code: 404 })
         }
 
         const verify = bcrypt.compare(password, find[0].password)
         if (!verify) {
+            logger.error("[login] - sorry your password not matched")
             histogram.labels(req.method, '400', 'login').observe(responseTime)
             res.status(400).json({
                 msg: 'sorry your password not matched',
@@ -105,13 +110,14 @@ export const loginUser = async (req: Request, res: Response) => {
             maxAge: 24 * 60 * 60 * 1000
         })
 
+        logger.info("[login] - success login account")
         histogram.labels(req.method, '200', 'login').observe(responseTime)
         counter.labels('login').inc()
         res.status(200).json({ msg: 'success login' })
     } catch (error) {
         const responseTime = Date.now() - start
-        histogram.labels(req.method, '404', 'login').observe(responseTime)
-
+        histogram.labels(req.method, '500', 'login').observe(responseTime)
+        logger.fatal("[login] - sorry something error in endpoint user")
         res.status(500).json({
             msg: 'something error',
             err: error,
@@ -131,6 +137,7 @@ export const findID = async (req: Request, res: Response) => {
         })
         
         if (!result) {
+            logger.error("[findID] - user not found")
             histogram.labels(req.method, '404', 'findID').observe(responseTime)
             res.status(404).json({
                 msg: 'user not found'
@@ -145,6 +152,7 @@ export const findID = async (req: Request, res: Response) => {
         response.username = result[0].username
 
 
+        logger.info("[findID] -  user found")
         histogram.labels(req.method, '200', 'findID').observe(responseTime)
         res.status(200).json({
             msg: 'user found',

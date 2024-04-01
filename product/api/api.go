@@ -18,8 +18,8 @@ import (
 )
 
 type API struct {
-	product handler.ProductInterface
-	comment handler.CommentInterface
+	product  handler.ProductInterface
+	comment  handler.CommentInterface
 	category handler.CategoryInterface
 }
 
@@ -69,10 +69,12 @@ func main() {
 	rabbitInterface := pkg.RabbitMQ(*rabbit)
 	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg})
 
+	logger := pkg.Logrus()
+
 	api := API{
-		product: handler.ProductHandler(productService, rabbitInterface, metric),
-		comment: handler.CommentHandler(commentService, metric),
-		category: handler.CategoryHandler(categoryService, metric),
+		product:  handler.ProductHandler(productService, rabbitInterface, metric, logger),
+		comment:  handler.CommentHandler(commentService, metric, logger),
+		category: handler.CategoryHandler(categoryService, metric, logger),
 	}
 
 	route := mux.NewRouter()
@@ -81,14 +83,14 @@ func main() {
 	route.Use(middleware.ValidateToken)
 	route.Handle("/metric", promHandler).Methods("GET")
 
-	// routes app 
+	// routes app
 	api.ProductRoute(route)
 	api.CategoryRoute(route)
 	api.CommentRoute(route)
 
 	dsn := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port)
 	serve := http.Server{
-		Addr: dsn,
+		Addr:    dsn,
 		Handler: route,
 	}
 

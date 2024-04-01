@@ -23,14 +23,15 @@ type CategoryInterface interface {
 
 type category struct {
 	service service.CategoryInterface
-	metric *pkg.Metric
+	metric  *pkg.Metric
+	log     pkg.ILogrus
 }
 
-func CategoryHandler(service service.CategoryInterface, metric *pkg.Metric) CategoryInterface {
-	return &category{service: service, metric: metric}
+func CategoryHandler(service service.CategoryInterface, metric *pkg.Metric, log pkg.ILogrus) CategoryInterface {
+	return &category{service: service, metric: metric, log: log}
 }
 
-func(c *category) Create(w http.ResponseWriter, r *http.Request) {
+func (c *category) Create(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	err := middleware.ValidateRole(token)
 	if err != nil {
@@ -39,7 +40,8 @@ func(c *category) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
-		
+
+		c.log.Record("/api/category/create", 403, "POST").Error("forbidden for this user")
 		c.metric.Histogram.With(prometheus.Labels{"code": "403", "method": "POST", "type": "create", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 		w.WriteHeader(403)
 		w.Write(response)
@@ -55,6 +57,7 @@ func(c *category) Create(w http.ResponseWriter, r *http.Request) {
 
 	data, err := c.service.Create(req)
 	if err != nil {
+		c.log.Record("/api/category/create", 400, "POST").Error("bad request for create category")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 		response, err := json.Marshal(web.BadRequest(err.Error()))
 		if err != nil {
@@ -75,13 +78,14 @@ func(c *category) Create(w http.ResponseWriter, r *http.Request) {
 
 	c.metric.Counter.With(prometheus.Labels{"type": "create", "service": "category"}).Inc()
 	c.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
-	
+	c.log.Record("/api/category/create", 201, "POST").Info("success create category")
+
 	w.WriteHeader(201)
 	w.Write(response)
 	return
 }
 
-func(c *category) FindID(w http.ResponseWriter, r *http.Request) {
+func (c *category) FindID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/api/category/find/"))
 	if err != nil {
 		w.WriteHeader(500)
@@ -96,6 +100,7 @@ func(c *category) FindID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		c.log.Record("/api/category/find/"+strconv.Itoa(id), 400, "GET").Error("bad request for find with this ID")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findID", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -109,13 +114,14 @@ func(c *category) FindID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.log.Record("/api/category/find/"+strconv.Itoa(id), 200, "GET").Info("success find with this ID")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
 }
 
-func(c *category) FindAll(w http.ResponseWriter, r *http.Request) {
+func (c *category) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := c.service.FindAll()
 	if err != nil {
 		response, err := json.Marshal(web.BadRequest(err.Error()))
@@ -124,6 +130,7 @@ func(c *category) FindAll(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		c.log.Record("/api/category/get", 400, "GET").Error("bad request for findall category")
 		c.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findAll", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 		w.WriteHeader(400)
 		w.Write(response)
@@ -136,6 +143,7 @@ func(c *category) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.log.Record("/api/category/get", 200, "GET").Info("success find all category")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)

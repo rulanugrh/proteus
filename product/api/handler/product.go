@@ -23,24 +23,27 @@ type ProductInterface interface {
 }
 
 type product struct {
-	service service.ProductInterface
+	service  service.ProductInterface
 	rabbitmq pkg.RabbitMQInterface
-	metric *pkg.Metric
+	metric   *pkg.Metric
+	log      pkg.ILogrus
 }
 
-func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metric) ProductInterface {
-	return &product{service: service, rabbitmq: rabbitmq, metric: metric}
+func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metric, log pkg.ILogrus) ProductInterface {
+	return &product{service: service, rabbitmq: rabbitmq, metric: metric, log: log}
 }
 
-func(p *product) Create(w http.ResponseWriter, r *http.Request) {
+func (p *product) Create(w http.ResponseWriter, r *http.Request) {
 	var req domain.Product
 
 	token := r.Header.Get("Authorization")
 
 	claim, err := middleware.CheckToken(token)
 	if err != nil {
+
+		p.log.Record("/api/product/create", 401, "POST").Warn("not have token")
 		p.metric.Histogram.With(prometheus.Labels{"code": "401", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
-		
+
 		w.WriteHeader(401)
 		return
 	}
@@ -52,6 +55,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/create", 403, "POST").Error("forbidden for this user")
 		p.metric.Histogram.With(prometheus.Labels{"code": "403", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(403)
@@ -66,6 +71,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/create", 500, "POST").Error("error binding request body")
 		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(500)
@@ -80,6 +87,8 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/create", 400, "POST").Error("bad request for create data")
 		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -97,6 +106,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		p.log.Record("/api/product/create", 400, "POST").Error("error publish to message broker")
 		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -110,6 +120,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.log.Record("/api/product/create", 201, "POST").Info("success create product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	p.metric.Counter.With(prometheus.Labels{"type": "create", "service": "product"}).Inc()
 	w.WriteHeader(201)
@@ -117,7 +128,7 @@ func(p *product) Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func(p *product) FindID(w http.ResponseWriter, r *http.Request) {
+func (p *product) FindID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/api/product/find/"))
 	if err != nil {
 		w.WriteHeader(500)
@@ -132,6 +143,7 @@ func(p *product) FindID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		p.log.Record("/api/product/find/"+strconv.Itoa(id), 400, "GET").Error("cannot get product by this id")
 		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -145,13 +157,14 @@ func(p *product) FindID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.log.Record("/api/product/find/"+strconv.Itoa(id), 200, "GET").Info("success get product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
 }
 
-func(p *product) FindAll(w http.ResponseWriter, r *http.Request) {
+func (p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := p.service.FindAll()
 	if err != nil {
 		response, err := json.Marshal(web.BadRequest(err.Error()))
@@ -159,6 +172,8 @@ func(p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/get", 400, "GET").Error("error get all product")
 		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -172,13 +187,14 @@ func(p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.log.Record("/api/product/get", 200, "GET").Error("success get all product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
 	return
 }
 
-func(p *product) Update(w http.ResponseWriter, r *http.Request) {
+func (p *product) Update(w http.ResponseWriter, r *http.Request) {
 	var req domain.Product
 	token := r.Header.Get("Authorization")
 
@@ -195,6 +211,8 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/update"+strconv.Itoa(id), 403, "PUT").Error("forbidden for this user")
 		p.metric.Histogram.With(prometheus.Labels{"code": "403", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(403)
@@ -209,6 +227,8 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/update"+strconv.Itoa(id), 500, "PUT").Error("error binding request body")
 		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(500)
@@ -223,6 +243,8 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+
+		p.log.Record("/api/product/update"+strconv.Itoa(id), 400, "PUT").Error("bad request for update data with this id")
 		p.metric.Histogram.With(prometheus.Labels{"code": "400", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 
 		w.WriteHeader(400)
@@ -236,6 +258,7 @@ func(p *product) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.log.Record("/api/product/update"+strconv.Itoa(id), 200, "PUT").Error("success update data")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	p.metric.Counter.With(prometheus.Labels{"type": "update", "service": "product"}).Inc()
 	w.WriteHeader(200)

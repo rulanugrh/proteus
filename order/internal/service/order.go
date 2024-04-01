@@ -14,6 +14,7 @@ import (
 	"github.com/rulanugrh/order/internal/repository"
 	"github.com/rulanugrh/order/internal/util"
 	"github.com/rulanugrh/order/pkg"
+	"github.com/rulanugrh/order/pkg/logger"
 )
 
 type OrderServiceServer struct {
@@ -23,10 +24,10 @@ type OrderServiceServer struct {
 	xendit     pkg.XenditInterface
 	rabbitmq   pkg.RabbitMQInterface
 	metric     *pkg.Metrict
-	log pkg.ILogrus
+	log logger.ILogrus
 }
 
-func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metrict, log pkg.ILogrus) *OrderServiceServer {
+func OrderService(repository repository.OrderInterface, product repository.ProductInterface, xendit pkg.XenditInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metrict, log logger.ILogrus) *OrderServiceServer {
 	return &OrderServiceServer{repository: repository, product: product, xendit: xendit, rabbitmq: rabbitmq, metric: metric, log: log}
 }
 

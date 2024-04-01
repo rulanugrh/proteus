@@ -13,6 +13,7 @@ import (
 	"github.com/rulanugrh/order/internal/util"
 	"github.com/rulanugrh/order/internal/util/constant"
 	"github.com/rulanugrh/order/pkg"
+	"github.com/rulanugrh/order/pkg/logger"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -21,10 +22,10 @@ type CartServiceServer struct {
 	repository repository.CartInterface
 	product    repository.ProductInterface
 	metric     *pkg.Metrict
-	log pkg.ILogrus
+	log        logger.ILogrus
 }
 
-func CartService(repository repository.CartInterface, product repository.ProductInterface, metric *pkg.Metrict, log pkg.ILogrus) *CartServiceServer {
+func CartService(repository repository.CartInterface, product repository.ProductInterface, metric *pkg.Metrict, log logger.ILogrus) *CartServiceServer {
 	return &CartServiceServer{repository: repository, product: product, metric: metric, log: log}
 }
 

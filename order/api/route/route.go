@@ -18,6 +18,7 @@ import (
 	"github.com/rulanugrh/order/internal/repository"
 	"github.com/rulanugrh/order/internal/service"
 	"github.com/rulanugrh/order/pkg"
+	"github.com/rulanugrh/order/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -59,7 +60,7 @@ func InitServer() {
 	rabbitmq.InitRabbit()
 
 	// Logger initialize
-	logger := pkg.Logrus()
+	logger := logger.Logrus()
 
 	productRepository := repository.ProductRepository(mongo, conf)
 	orderRepository := repository.OrderRepository(postgres)

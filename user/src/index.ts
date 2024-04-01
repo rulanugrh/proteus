@@ -4,8 +4,15 @@ import 'dotenv/config'
 import { router } from "./route/route";
 import { register, totalCPU, totalMemory } from "./helper/prometheus";
 import { Logger } from "tslog";
+import { appendFileSync } from "fs";
 
+// setup logger for trigger to loki
+// and save logger tu local
 export const logger = new Logger({ name: 'user-services '});
+logger.attachTransport((logger) => {
+    appendFileSync("../../data/log/user.log", JSON.stringify(logger) + '\n')
+})
+
 export const prisma = new PrismaClient();
 
 const app = express()

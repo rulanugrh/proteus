@@ -1,5 +1,10 @@
+# setting version docker-compose, new version is 3.9
 version: '3.9'
+
+# initialize all service will be wrapping in docker
 services:
+
+  # database for production
   db-product:
     image: postgres:alpine
     container_name: db-product
@@ -14,6 +19,7 @@ services:
     networks:
       - tokoku
 
+  # database for user
   db-user:
     image: postgres:alpine
     container_name: db-user
@@ -28,6 +34,7 @@ services:
     networks:
       - tokoku
   
+  # database for order
   db-order:
     image: postgres:alpine
     container_name: db-order
@@ -42,6 +49,7 @@ services:
     networks:
       - tokoku
 
+  # application product
   app-product:
     build:
       context: ./product/
@@ -58,6 +66,7 @@ services:
     depends_on:
       - db-product
   
+  # prometheus for observability
   prometheus:
     image: prom/prometheus:v2.40.4
     container_name: prome-tokoku
@@ -68,6 +77,7 @@ services:
     networks:
       - tokoku
   
+  # grafana for visualize
   grafana:
     image: grafana/grafana:9.3.0
     container_name: grafana-tokoku
@@ -81,7 +91,33 @@ services:
       - ./data/grafana:/var/lib/grafana
     networks:
       - tokoku
+  
+  # loki for server logger
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    volumes:
+      - ./provisioning/observability/loki.yml:/etc/loki/local-config.yml
+    command: -config.file=/etc/loki/local-config.yml
+    networks:
+      - tokoku
+  
+  # client for send logging
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail-tokoku
+    volumes:
+      - ./provisioning/observability/promtail.yml:/etc/promtail/docker-config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/docker-config.yaml
+    depends_on:
+      - loki
+    networks:
+      - tokoku
 
+  # order application
   app-order:
     build:
       context: ./order/
@@ -100,6 +136,7 @@ services:
     depends_on:
       - db-order
 
+  # user application
   app-user:
     build:
       context: ./user/
@@ -116,6 +153,7 @@ services:
     depends_on:
       - db-user
 
+  # webhook application
   app-webhook:
     build: 
       context: ./webhook/
@@ -130,6 +168,7 @@ services:
     networks:
       - tokoku
   
+  # message broker for pub-sub
   rabbitmq:
     image: rabbitmq:3.13.0-management-alpine
     container_name: rabbitmq
@@ -143,6 +182,7 @@ services:
     networks:
       - tokoku
   
+  # nginx for api gateway
   nginx:
     image: nginx
     container_name: nginx-gateway
@@ -157,6 +197,8 @@ services:
     networks:
       - tokoku
       
+
+# networks setap for all service in this docker compose
 networks:
   tokoku:
     driver: bridge

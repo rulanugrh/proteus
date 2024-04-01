@@ -8,6 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rabbitmq/amqp091-go v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/xendit/xendit-go/v4 v4.3.0
 	go.mongodb.org/mongo-driver v1.14.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe

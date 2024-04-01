@@ -18,7 +18,7 @@ type CartInterface interface {
 
 type cart struct {
 	client *config.Postgres
-	log logger.ILogrus
+	log    logger.ILogrus
 }
 
 func CartRepository(client *config.Postgres) CartInterface {

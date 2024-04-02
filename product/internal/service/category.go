@@ -1,9 +1,12 @@
 package service
 
 import (
+	"strconv"
+
 	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
 	"github.com/rulanugrh/tokoku/product/internal/entity/web"
 	"github.com/rulanugrh/tokoku/product/internal/repository"
+	"github.com/rulanugrh/tokoku/product/pkg"
 )
 
 type CategoryInterface interface {
@@ -14,15 +17,17 @@ type CategoryInterface interface {
 
 type category struct {
 	repository repository.CategoryInterface
+	log pkg.ILogrus
 }
 
 func CategoryService(repository repository.CategoryInterface) CategoryInterface {
-	return &category{repository: repository}
+	return &category{repository: repository, log: pkg.Logrus()}
 }
 
 func (c *category) Create(req domain.Category) (*web.Category, error) {
 	data, err := c.repository.Create(req)
 	if err != nil {
+		c.log.Record("/api/category/create", 500, "POST").Error(err.Error())
 		return nil, err
 	}
 
@@ -32,12 +37,14 @@ func (c *category) Create(req domain.Category) (*web.Category, error) {
 		Description: data.Description,
 	}
 
+	c.log.Record("/api/category/create", 200, "POST").Info("success create category")
 	return &response, nil
 }
 
 func (c *category) FindID(id uint) (*web.GetCategory, error) {
 	data, err := c.repository.FindID(id)
 	if err != nil {
+		c.log.Record("/api/category/find/"+strconv.Itoa(int(id)), 500, "GET").Error(err.Error())
 		return nil, err
 	}
 
@@ -63,12 +70,14 @@ func (c *category) FindID(id uint) (*web.GetCategory, error) {
 		Product:     products,
 	}
 
+	c.log.Record("/api/category/find/"+strconv.Itoa(int(id)), 200, "GET").Info("success get category by this id "+strconv.Itoa(int(id)))
 	return &response, nil
 }
 
 func (c *category) FindAll() (*[]web.GetCategory, error) {
 	data, err := c.repository.FindAll()
 	if err != nil {
+		c.log.Record("/api/category/get", 500, "GET").Error(err.Error())
 		return nil, err
 	}
 
@@ -98,5 +107,6 @@ func (c *category) FindAll() (*[]web.GetCategory, error) {
 		response = append(response, result)
 	}
 
+	c.log.Record("/api/category/get", 200, "GET").Info("success get all category")
 	return &response, nil
 }

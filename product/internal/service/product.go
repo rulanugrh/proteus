@@ -1,9 +1,12 @@
 package service
 
 import (
+	"strconv"
+
 	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
 	"github.com/rulanugrh/tokoku/product/internal/entity/web"
 	"github.com/rulanugrh/tokoku/product/internal/repository"
+	"github.com/rulanugrh/tokoku/product/pkg"
 )
 
 type ProductInterface interface {
@@ -15,15 +18,17 @@ type ProductInterface interface {
 
 type product struct {
 	repository repository.ProductInterface
+	log pkg.ILogrus
 }
 
 func ProductService(repository repository.ProductInterface) ProductInterface {
-	return &product{repository: repository}
+	return &product{repository: repository, log: pkg.Logrus()}
 }
 
 func (p *product) Create(req domain.Product) (*web.Product, error) {
 	data, err := p.repository.Create(req)
 	if err != nil {
+		p.log.Record("/api/product/create", 500, "POST").Error(err.Error())
 		return nil, err
 	}
 
@@ -37,12 +42,14 @@ func (p *product) Create(req domain.Product) (*web.Product, error) {
 		Category:    data.Category.Name,
 	}
 
+	p.log.Record("/api/product/create", 200, "POST").Info("success create product")
 	return &response, nil
 }
 
 func (p *product) FindID(id uint) (*web.GetProduct, error) {
 	data, err := p.repository.FindID(id)
 	if err != nil {
+		p.log.Record("/api/product/find/"+strconv.Itoa(int(id)), 500, "GET").Error(err.Error())
 		return nil, err
 	}
 
@@ -70,12 +77,14 @@ func (p *product) FindID(id uint) (*web.GetProduct, error) {
 		Comment:     comment,
 	}
 
+	p.log.Record("/api/product/find/"+strconv.Itoa(int(id)), 200, "GET").Info("success get product")
 	return &response, nil
 }
 
 func (p *product) FindAll() (*[]web.GetProduct, error) {
 	data, err := p.repository.FindAll()
 	if err != nil {
+		p.log.Record("/api/product/get", 500, "GET").Info(err.Error())
 		return nil, err
 	}
 
@@ -108,12 +117,14 @@ func (p *product) FindAll() (*[]web.GetProduct, error) {
 		response = append(response, res)
 	}
 
+	p.log.Record("/api/product/get", 200, "GET").Info("success get all product")
 	return &response, nil
 }
 
 func (p *product) Update(id uint, req domain.Product) (*web.Product, error) {
 	data, err := p.repository.Update(id, req)
 	if err != nil {
+		p.log.Record("/api/product/update"+strconv.Itoa(int(id)), 500, "PUT").Error(err.Error())
 		return nil, err
 	}
 
@@ -126,5 +137,6 @@ func (p *product) Update(id uint, req domain.Product) (*web.Product, error) {
 		Category:  data.Category.Name,
 	}
 
+	p.log.Record("/api/product/update"+strconv.Itoa(int(id)), 200, "PUT").Info("success update data")
 	return &response, nil
 }

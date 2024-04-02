@@ -29,8 +29,8 @@ type product struct {
 	log      pkg.ILogrus
 }
 
-func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metric, log pkg.ILogrus) ProductInterface {
-	return &product{service: service, rabbitmq: rabbitmq, metric: metric, log: log}
+func ProductHandler(service service.ProductInterface, rabbitmq pkg.RabbitMQInterface, metric *pkg.Metric) ProductInterface {
+	return &product{service: service, rabbitmq: rabbitmq, metric: metric, log: pkg.Logrus()}
 }
 
 func (p *product) Create(w http.ResponseWriter, r *http.Request) {
@@ -66,17 +66,7 @@ func (p *product) Create(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		response, err := json.Marshal(web.InternalServerError("sorry cannot read body request"))
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-
-		p.log.Record("/api/product/create", 500, "POST").Error("error binding request body")
-		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
-
 		w.WriteHeader(500)
-		w.Write(response)
 		return
 	}
 
@@ -120,7 +110,6 @@ func (p *product) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.log.Record("/api/product/create", 201, "POST").Info("success create product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	p.metric.Counter.With(prometheus.Labels{"type": "create", "service": "product"}).Inc()
 	w.WriteHeader(201)
@@ -157,7 +146,6 @@ func (p *product) FindID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.log.Record("/api/product/find/"+strconv.Itoa(id), 200, "GET").Info("success get product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
@@ -187,7 +175,6 @@ func (p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.log.Record("/api/product/get", 200, "GET").Error("success get all product")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
@@ -222,17 +209,7 @@ func (p *product) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		response, err := json.Marshal(web.InternalServerError("sorry cannot read body request"))
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-
-		p.log.Record("/api/product/update"+strconv.Itoa(id), 500, "PUT").Error("error binding request body")
-		p.metric.Histogram.With(prometheus.Labels{"code": "500", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
-
 		w.WriteHeader(500)
-		w.Write(response)
 		return
 	}
 
@@ -258,7 +235,6 @@ func (p *product) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.log.Record("/api/product/update"+strconv.Itoa(id), 200, "PUT").Error("success update data")
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "PUT", "type": "update", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	p.metric.Counter.With(prometheus.Labels{"type": "update", "service": "product"}).Inc()
 	w.WriteHeader(200)

@@ -27,8 +27,8 @@ type category struct {
 	log     pkg.ILogrus
 }
 
-func CategoryHandler(service service.CategoryInterface, metric *pkg.Metric, log pkg.ILogrus) CategoryInterface {
-	return &category{service: service, metric: metric, log: log}
+func CategoryHandler(service service.CategoryInterface, metric *pkg.Metric) CategoryInterface {
+	return &category{service: service, metric: metric, log: pkg.Logrus()}
 }
 
 func (c *category) Create(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +78,6 @@ func (c *category) Create(w http.ResponseWriter, r *http.Request) {
 
 	c.metric.Counter.With(prometheus.Labels{"type": "create", "service": "category"}).Inc()
 	c.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
-	c.log.Record("/api/category/create", 201, "POST").Info("success create category")
 
 	w.WriteHeader(201)
 	w.Write(response)
@@ -114,7 +113,6 @@ func (c *category) FindID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.log.Record("/api/category/find/"+strconv.Itoa(id), 200, "GET").Info("success find with this ID")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
@@ -143,7 +141,6 @@ func (c *category) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.log.Record("/api/category/get", 200, "GET").Info("success find all category")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)

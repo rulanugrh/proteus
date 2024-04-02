@@ -69,12 +69,10 @@ func main() {
 	rabbitInterface := pkg.RabbitMQ(*rabbit)
 	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg})
 
-	logger := pkg.Logrus()
-
 	api := API{
-		product:  handler.ProductHandler(productService, rabbitInterface, metric, logger),
-		comment:  handler.CommentHandler(commentService, metric, logger),
-		category: handler.CategoryHandler(categoryService, metric, logger),
+		product:  handler.ProductHandler(productService, rabbitInterface, metric),
+		comment:  handler.CommentHandler(commentService, metric),
+		category: handler.CategoryHandler(categoryService, metric),
 	}
 
 	route := mux.NewRouter()

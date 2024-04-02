@@ -27,8 +27,8 @@ type comment struct {
 	log     pkg.ILogrus
 }
 
-func CommentHandler(service service.CommentInterface, metric *pkg.Metric, log pkg.ILogrus) CommentInterface {
-	return &comment{service: service, metric: metric, log: log}
+func CommentHandler(service service.CommentInterface, metric *pkg.Metric) CommentInterface {
+	return &comment{service: service, metric: metric, log: pkg.Logrus()}
 }
 
 func (c *comment) Create(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,6 @@ func (c *comment) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.log.Record("/api/comment/create", 201, "POST").Info("success create comment")
 	c.metric.Histogram.With(prometheus.Labels{"code": "201", "method": "POST", "type": "create", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 	c.metric.Counter.With(prometheus.Labels{"type": "create", "service": "category"}).Inc()
 	w.WriteHeader(201)
@@ -130,7 +129,6 @@ func (c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.log.Record("/api/comment/get", 200, "GET").Info("success get all comment")
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findUID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
@@ -165,8 +163,6 @@ func (c *comment) FindPID(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-
-	c.log.Record("/api/comment/product/"+strconv.Itoa(id), 200, "GET").Info("success get comment with this product ID")
 
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findPID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 

@@ -15,8 +15,8 @@ jobs:
     - name: build binary product service
     - run: cd product && go mod tidy && go build -o build/main -v api/api.go
 
-    - name: build binary order service
-    - run: cd order && go mod tidy && go build -o build/main -v api/api.go
+    # - name: build binary order service
+    # - run: cd order && go mod tidy && go build -o build/main -v api/api.go
 
-    - name: build binary webhook service
-    - run: cd webhook && go mod tidy && go build -o build/main
+    # - name: build binary webhook service
+    # - run: cd webhook && go mod tidy && go build -o build/main

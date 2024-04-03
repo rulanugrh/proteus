@@ -64,6 +64,37 @@ func (product *ProductTest) TestProductGetByID() {
 	product.Equal(uint(1), data.ID)
 }
 
+func (product *ProductTest) TestProductGetAll() {
+	productResult := func () *[]domain.Product  {
+		output := &[]domain.Product{}
+		return output
+	}
+
+	product.repo.On("FindAll", mock.Anything).Return(productResult, nil)
+
+	_, err := product.repo.FindAll()
+
+	product.Nil(nil, err)
+}
+
+func (product *ProductTest) TestProductUpdate() {
+	productResult := func (id uint, input domain.Product) *domain.Product  {
+		output := &domain.Product{}
+		output.QtyAvailable = input.QtyAvailable
+		output.ID = id
+		return output
+	}
+
+	product.repo.On("Update", mock.AnythingOfType("uint"), mock.AnythingOfType("domain.Product")).Return(productResult, nil)
+
+	data, err := product.repo.Update(uint(1), domain.Product{
+		QtyAvailable: 10,
+	})
+
+	product.Nil(nil, err)
+	product.Equal(uint(1), data.ID)
+}
+
 func TestProduct(t *testing.T) {
 	suite.Run(t, NewTestProduct())
 }

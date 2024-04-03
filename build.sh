@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-command=$1
-
 check_os() {
     . /etc/os-release
     case $ID in
@@ -20,15 +18,26 @@ check_os() {
     esac
 }
 
-if [[ $command == "requirements" ]]
-then
+requirements() {
     check_os
-    exit 0
-else if [[ $command == "build" ]]
-then
+}
+
+build() {
     docker compose up -d db-product && docker compose up -d db-user && docker compose up -d db-order && docker compose up -d
-    exit
+}
+
+help() {
+    echo "Usage: $(basename "$0") [OPTIONS]
+    Commands:
+        requirements    To install requirements
+        build           To build docker compose
+        help            To show help command
+    "
+}
+
+if [[ $1 =~ ^(requirements|build|help)$ ]]; then
+    "$@"
 else
-    echo "sorry invalid command"
+    echo "Invalid command '$1'" >&2
+    exit 1
 fi
-    

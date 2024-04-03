@@ -14,7 +14,7 @@ jobs:
 
 
     - name: running unit test product services
-      run: cd product && go mod tidy && go test ./test/
+      run: cd product && go mod tidy && go test -v ./test/
 
     - name: build binary order services
       run: cd order && go mod tidy && go build -o build/main -v api/api.go

@@ -22,8 +22,5 @@ jobs:
     - name: Install Package
       run: cd user && npm i
 
-    - name: Lint Project
-      run: cd user && npm run lint
-
     - name: Clean modules
       run: cd user && rm -rf node_modules

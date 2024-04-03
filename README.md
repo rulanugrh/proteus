@@ -32,6 +32,9 @@ Next, you can run the program with `build.sh` file
 # change permission of file build.sh
 $ chmod +x build.sh
 
+# to show help command
+$ ./build.sh help
+
 # if you dont have docker you can running this
 $ ./build.sh requirements
 

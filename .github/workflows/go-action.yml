@@ -13,8 +13,8 @@ jobs:
         go-version: '1.21.6'
 
 
-    - name: build binary product services
-      run: cd product && go mod tidy && go build -o build/main -v api/api.go
+    - name: running unit test product services
+      run: cd product && go mod tidy && go test ./test/
 
     - name: build binary order services
       run: cd order && go mod tidy && go build -o build/main -v api/api.go

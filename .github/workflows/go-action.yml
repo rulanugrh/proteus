@@ -2,7 +2,7 @@ name: build-binary
 on: [push, pull_request]
 
 jobs:
-  running-test-in-ubuntu:
+  build-binary-go:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -13,11 +13,11 @@ jobs:
         go-version: '1.21.6'
 
 
-    - name: echo "build binary product services"
+    - name: build binary product services
       run: cd product && go mod tidy && go build -o build/main -v api/api.go
 
-    - name: echo "build binary order services"
+    - name: build binary order services
       run: cd order && go mod tidy && go build -o build/main -v api/api.go
 
-    - name: echo "build binary webhook services"
+    - name: build binary webhook services
       run: cd webhook && go mod tidy && go build -o build/main

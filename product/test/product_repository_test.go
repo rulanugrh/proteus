@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/rulanugrh/tokoku/product/internal/entity/domain"
-	"github.com/rulanugrh/tokoku/product/internal/mocks/repomocks"
+	repomocks "github.com/rulanugrh/tokoku/product/internal/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

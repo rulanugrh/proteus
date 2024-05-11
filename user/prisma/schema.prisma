@@ -16,7 +16,7 @@ datasource db {
 model User {
   id int @id @default(autoincrement())
   createAt DateTime @default(now())
-  updateAt DateTime @updateAt
+  updateAt DateTime @updatedAt
   fname String
   lname String
   username String @db.varchar(20)
@@ -29,7 +29,7 @@ model User {
 model Role {
   id int @id @default(autoincrement())
   createAt DateTime @default(now())
-  updateAt DateTime @updateAt
+  updateAt DateTime @updatedAt
   name String
   desc String
   user User[]

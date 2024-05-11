@@ -98,9 +98,9 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         const payload = new Payload()
-        payload.avatar = find[0].avatar
-        payload.roleID = find[0].roleID
-        payload.username = find[0].username
+        payload.avatar = find.avatar
+        payload.roleID = find.roleID
+        payload.username = find.username
 
         const token = await generateToken(payload)
 
@@ -145,11 +145,11 @@ export const findID = async (req: Request, res: Response) => {
         }
 
         const response: Result = new Result()
-        response.avatar = result[0].avatar
-        response.fname = result[0].fname
-        response.lname = result[0].lname
-        response.roleID = result[0].roleID
-        response.username = result[0].username
+        response.avatar = result.avatar
+        response.fname = result.fname
+        response.lname = result.lname
+        response.roleID = result.roleID
+        response.username = result.username
 
 
         logger.info("[findID] -  user found")

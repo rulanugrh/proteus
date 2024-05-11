@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 import express, { Request, Response } from 'express'
 import 'dotenv/config'
 import { router } from "./route/route";

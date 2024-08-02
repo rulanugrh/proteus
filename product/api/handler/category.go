@@ -81,7 +81,6 @@ func (c *category) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	w.Write(response)
-	return
 }
 
 func (c *category) FindID(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +115,6 @@ func (c *category) FindID(w http.ResponseWriter, r *http.Request) {
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }
 
 func (c *category) FindAll(w http.ResponseWriter, r *http.Request) {
@@ -144,5 +142,4 @@ func (c *category) FindAll(w http.ResponseWriter, r *http.Request) {
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "category"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }

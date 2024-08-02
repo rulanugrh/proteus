@@ -13,6 +13,7 @@ import (
 	"github.com/rulanugrh/tokoku/product/internal/middleware"
 	"github.com/rulanugrh/tokoku/product/internal/service"
 	"github.com/rulanugrh/tokoku/product/pkg"
+	proto "google.golang.org/protobuf/proto"
 )
 
 type ProductInterface interface {
@@ -86,9 +87,19 @@ func (p *product) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	marshalling, _ := json.Marshal(data)
+	events := web.Product{
+		ID: data.ID,
+		Name: data.Name,
+		Description: data.Description,
+		Price: data.Price,
+		Available: data.Available,
+		Reserved: data.Reserved,
+		Category: data.Category,
+	}
 
-	err = p.rabbitmq.Publish("product-create", marshalling, "product", "topic", claim.Username)
+	marshalling, _ := proto.Marshal(&events)
+
+	err = p.rabbitmq.Publish("product-create", marshalling, "product.info", "topic", claim.Username)
 	if err != nil {
 		response, err := json.Marshal(web.BadRequest(err.Error()))
 		if err != nil {
@@ -114,7 +125,6 @@ func (p *product) Create(w http.ResponseWriter, r *http.Request) {
 	p.metric.Counter.With(prometheus.Labels{"type": "create", "service": "product"}).Inc()
 	w.WriteHeader(201)
 	w.Write(response)
-	return
 }
 
 func (p *product) FindID(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +159,6 @@ func (p *product) FindID(w http.ResponseWriter, r *http.Request) {
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findID", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }
 
 func (p *product) FindAll(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +187,6 @@ func (p *product) FindAll(w http.ResponseWriter, r *http.Request) {
 	p.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findAll", "service": "product"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }
 
 func (p *product) Update(w http.ResponseWriter, r *http.Request) {
@@ -239,5 +247,4 @@ func (p *product) Update(w http.ResponseWriter, r *http.Request) {
 	p.metric.Counter.With(prometheus.Labels{"type": "update", "service": "product"}).Inc()
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }

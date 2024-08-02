@@ -11,7 +11,7 @@ import (
 )
 
 type RabbitMQInterface interface {
-	Publish(name string, data []byte, exhange string, exchangeType string, userID string) error
+	Publish(name string, data []byte, key string, exchangeType string, userID string) error
 }
 
 type rabbit struct {
@@ -22,9 +22,9 @@ func RabbitMQ(channel config.RabbitMQ) RabbitMQInterface {
 	return &rabbit{channel: channel}
 }
 
-func(r *rabbit) Publish(name string, data []byte, exhange string, exchangeType string, userID string) error {
+func(r *rabbit) Publish(name string, data []byte, key string, exchangeType string, userID string) error {
 	log.Println("[*] Declaring Exchange...")
-	err := r.channel.Channel.ExchangeDeclare(exhange, exchangeType, false, false, false, false, nil)
+	err := r.channel.Channel.ExchangeDeclare("product.*", exchangeType, false, false, false, false, nil)
 	if err != nil {
 		return web.InternalServerError(err.Error())
 	}
@@ -36,21 +36,22 @@ func(r *rabbit) Publish(name string, data []byte, exhange string, exchangeType s
 	}
 
 	log.Println("[*] Queue Binding...")
-	if err = r.channel.Channel.QueueBind(queue.Name, "info", exhange, false, nil); err != nil {
+	if err = r.channel.Channel.QueueBind(queue.Name, key, "product.*", false, nil); err != nil {
 		return web.BadRequest(err.Error())
 	}
 
 	log.Println("[*] Publisher with context...")
 
-	err_pub := r.channel.Channel.PublishWithContext(context.Background(), exhange, queue.Name, false, false, amqp091.Publishing{
+	errPub := r.channel.Channel.PublishWithContext(context.Background(), "product.*", key, false, false, amqp091.Publishing{
 		ContentType: "application/json",
 		Body: data,
 		Timestamp: time.Now(),
 		UserId: userID,
 	})
 
-	if err_pub != nil {
-		return web.InternalServerError(err_pub.Error())
+	if errPub != nil {
+		log.Println("[*] Error publish message")
+		return web.InternalServerError(errPub.Error())
 	}
 
 	log.Println("[*] Publisher Success")

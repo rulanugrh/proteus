@@ -87,7 +87,6 @@ func (c *comment) Create(w http.ResponseWriter, r *http.Request) {
 	c.metric.Counter.With(prometheus.Labels{"type": "create", "service": "category"}).Inc()
 	w.WriteHeader(201)
 	w.Write(response)
-	return
 }
 
 func (c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +131,6 @@ func (c *comment) FindUID(w http.ResponseWriter, r *http.Request) {
 	c.metric.Histogram.With(prometheus.Labels{"code": "200", "method": "GET", "type": "findUID", "service": "comment"}).Observe(time.Since(time.Now()).Seconds())
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }
 
 func (c *comment) FindPID(w http.ResponseWriter, r *http.Request) {
@@ -168,5 +166,4 @@ func (c *comment) FindPID(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(200)
 	w.Write(response)
-	return
 }

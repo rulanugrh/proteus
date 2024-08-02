@@ -1,6 +1,10 @@
 package web
 
+import "google.golang.org/protobuf/proto"
+
 type Product struct {
+	proto.Message
+	
 	ID          uint   `json:"id"`
 	Name        string `json:"name" form:"name"`
 	Description string `json:"desc" form:"desc"`

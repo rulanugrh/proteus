@@ -1,4 +1,5 @@
 name: "Dependabot Automerge - Action"
+
 on:
   pull_request:
 

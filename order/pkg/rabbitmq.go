@@ -11,6 +11,7 @@ import (
 	"github.com/rulanugrh/order/internal/entity"
 	"github.com/rulanugrh/order/internal/repository"
 	"github.com/rulanugrh/order/internal/util/constant"
+	proto "google.golang.org/protobuf/proto"
 )
 
 type RabbitMQInterface interface {
@@ -88,13 +89,22 @@ func (r *rabbit) CatchProduct() error {
 	go func() {
 		for msg := range message {
 			log.Println("[*] Success Receive Message")
-			var payload entity.Product
-			err := json.Unmarshal(msg.Body, &payload)
+			var payload entity.ProductReceiver
+			err := proto.Unmarshal(msg.Body, &payload)
 			if err != nil {
 				log.Printf("error marshaling response: %s", err.Error())
 			}
 
-			err_created := r.db.Create(payload)
+			saveToDB := entity.Product{
+				ID: payload.ID,
+				Name: payload.Name,
+				Description: payload.Description,
+				Category: payload.Category,
+				Available: payload.Available,
+				Reserved: payload.Reserved,
+			}
+			
+			err_created := r.db.Create(saveToDB)
 			if err_created != nil {
 				log.Printf("error create, because: %s", err_created.Error())
 			}

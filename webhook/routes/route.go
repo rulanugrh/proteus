@@ -8,6 +8,7 @@ import (
 
 func HandlerRoute(webhook *handler.WebhookHandler, addr string) error {
 	serv := http.NewServeMux()
+
 	serv.HandleFunc("/payment_success", webhook.PaymentSucess)
 	serv.HandleFunc("/payment_failed", webhook.PaymentFailed)
 	serv.HandleFunc("/payment_waiting", webhook.AwaitPaymentCapture)

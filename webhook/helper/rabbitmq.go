@@ -11,7 +11,7 @@ import (
 )
 
 type IRabbitMQ interface {
-	Publisher(name string, data []byte, exchange string, exchangeType string) error
+	Publisher(name string, data []byte, key string, exchangeType string) error
 }
 
 type rabbitmq struct {
@@ -42,9 +42,9 @@ func IntializeRabbitMQ() IRabbitMQ {
 	return &rabbitmq{channel: channel}
 }
 
-func (r *rabbitmq) Publisher(name string, data []byte, exchange string, exchangeType string) error {
+func (r *rabbitmq) Publisher(name string, data []byte, key string, exchangeType string) error {
 	log.Println("[*] Declaring Exchange...")
-	err := r.channel.ExchangeDeclare(exchange, exchangeType, false, false, false, false, nil)
+	err := r.channel.ExchangeDeclare("webhook.*", exchangeType, false, false, false, false, nil)
 	if err != nil {
 		log.Println("[x] Error declaring exchange")
 	}
@@ -57,13 +57,13 @@ func (r *rabbitmq) Publisher(name string, data []byte, exchange string, exchange
 	}
 
 	log.Println("[*] Queue Binding...")
-	err_binding := r.channel.QueueBind(queue.Name, "info", exchange, false, nil)
+	err_binding := r.channel.QueueBind(queue.Name, key, "webhook.*", false, nil)
 	if err_binding != nil {
 		log.Println("[x] Error binding queue")
 	}
 
 	log.Println("[*] Publish With Context...")
-	err_pub := r.channel.PublishWithContext(context.Background(), exchange, queue.Name, false, false, amqp091.Publishing{
+	err_pub := r.channel.PublishWithContext(context.Background(), "webhook.*", queue.Name, false, false, amqp091.Publishing{
 		ContentType: "application/json",
 		Body: data,
 		Timestamp: time.Now(),

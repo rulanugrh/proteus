@@ -23,7 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "prom-client": "^15.1.1",
     "tslog": "^4.9.2",
-    "winston": "^3.12.0",
+    "winston": "^3.13.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

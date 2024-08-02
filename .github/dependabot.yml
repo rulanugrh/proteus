@@ -1,5 +1,4 @@
 # Configure `security` to all services
-
 version: 2
 updates:
   # Enable for service user

@@ -1,0 +1,27 @@
+# Configure `security` to all services
+
+version: 2
+updates:
+  # Enable for service user
+  - package-ecosystem: "npm"
+    directory: "/user"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "update_user_package"
+  
+  # Enable for product service
+  - package-ecosystem: "gomod"
+    directory: "/product"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "update_product_package"
+  
+  # Enable for order service
+  - package-ecosystem: "gomod"
+    directory: "/order"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "update_product_package"

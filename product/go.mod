@@ -1,6 +1,7 @@
 module github.com/rulanugrh/tokoku/product
 
 go 1.21.6
+toolchain go1.24.1
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -10,7 +11,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )

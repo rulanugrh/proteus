@@ -14,7 +14,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.3
 	google.golang.org/genproto/googleapis/api v0.0.0-20250303144028-a0af3efb3deb
 	google.golang.org/grpc v1.71.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )

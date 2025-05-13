@@ -16,7 +16,7 @@
     "@prisma/client": "^6.7.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
-    "debug": "^4.4.0",
+    "debug": "^4.4.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-winston": "^4.2.0",

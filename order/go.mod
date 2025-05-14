@@ -1,6 +1,7 @@
 module github.com/rulanugrh/order
 
-go 1.21.6
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -13,7 +14,7 @@ require (
 	github.com/xendit/xendit-go/v4 v4.3.0
 	go.mongodb.org/mongo-driver v1.17.3
 	google.golang.org/genproto/googleapis/api v0.0.0-20250303144028-a0af3efb3deb
-	google.golang.org/grpc v1.72.0
+	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.6
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.26.1

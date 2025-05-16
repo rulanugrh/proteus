@@ -30,7 +30,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.18",
     "@types/debug": "^4.1.12",
-    "@types/express": "^5.0.1",
+    "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "prisma": "^6.8.2",
     "source-map-support": "^0.5.21",

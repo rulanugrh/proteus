@@ -1,6 +1,7 @@
 module github.com/rulanugrh/tokoku/product
 
-go 1.21.6
+go 1.22
+
 toolchain go1.24.1
 
 require (
@@ -13,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.6
 	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.26.1
+	gorm.io/gorm v1.30.0
 )
 
 require (

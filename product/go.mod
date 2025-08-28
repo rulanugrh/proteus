@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/client_golang v1.23.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.8
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1

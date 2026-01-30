@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.6
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.7
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.10.0

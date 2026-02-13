@@ -14,7 +14,7 @@ require (
 	github.com/xendit/xendit-go/v4 v4.3.0
 	go.mongodb.org/mongo-driver v1.17.9
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57
-	google.golang.org/grpc v1.79.0
+	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1

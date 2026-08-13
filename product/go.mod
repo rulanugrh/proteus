@@ -10,7 +10,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.13.0
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	gorm.io/driver/postgres v1.6.2
 	gorm.io/gorm v1.31.2
 )
